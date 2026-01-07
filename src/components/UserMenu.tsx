@@ -1,0 +1,101 @@
+import { Link } from 'react-router-dom';
+import { User, LogOut, Shield, Users, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+
+export function UserMenu() {
+  const { user, role, isAdmin, isMember, isAuthenticated, isLoading, signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: 'Erro ao sair',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Até logo!',
+        description: 'Você saiu da sua conta',
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Button variant="ghost" size="sm" disabled>
+        <Loader2 className="w-4 h-4 animate-spin" />
+      </Button>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Button asChild variant="outline" size="sm" className="gap-2">
+        <Link to="/auth">
+          <User className="w-4 h-4" />
+          <span className="hidden sm:inline">Entrar</span>
+        </Link>
+      </Button>
+    );
+  }
+
+  const getRoleBadge = () => {
+    if (isAdmin) {
+      return (
+        <span className="flex items-center gap-1 text-xs font-medium text-amber-500">
+          <Shield className="w-3 h-3" />
+          Admin
+        </span>
+      );
+    }
+    if (isMember) {
+      return (
+        <span className="flex items-center gap-1 text-xs font-medium text-primary">
+          <Users className="w-3 h-3" />
+          Membro
+        </span>
+      );
+    }
+    return (
+      <span className="text-xs text-muted-foreground">Sem papel definido</span>
+    );
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-2">
+          <User className="w-4 h-4" />
+          <span className="hidden sm:inline max-w-24 truncate">
+            {user?.email?.split('@')[0]}
+          </span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>
+          <div className="flex flex-col gap-1">
+            <span className="font-medium truncate">{user?.email}</span>
+            {getRoleBadge()}
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
+          <LogOut className="w-4 h-4 mr-2" />
+          Sair
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

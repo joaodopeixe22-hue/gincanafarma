@@ -10,9 +10,11 @@ interface GincanaCalendarProps {
   onSelectDate: (date: Date) => void;
   hasDataForDay: (date: Date) => boolean;
   onDayClick: (date: Date) => void;
+  canEdit?: boolean;
+  canAdd?: boolean;
 }
 
-export function GincanaCalendar({ selectedDate, onSelectDate, hasDataForDay, onDayClick }: GincanaCalendarProps) {
+export function GincanaCalendar({ selectedDate, onSelectDate, hasDataForDay, onDayClick, canEdit = false, canAdd = false }: GincanaCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
   const monthStart = startOfMonth(currentMonth);
@@ -72,16 +74,22 @@ export function GincanaCalendar({ selectedDate, onSelectDate, hasDataForDay, onD
           const isSelected = isSameDay(day, selectedDate);
           const isCurrentDay = isToday(day);
           
+          // Determinar se o dia é clicável
+          const isClickable = canEdit || (canAdd && !hasData);
+          
           return (
             <button
               key={day.toISOString()}
               onClick={() => onDayClick(day)}
+              disabled={!isClickable && !hasData}
               className={cn(
                 'aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all duration-200',
-                'hover:scale-105 hover:shadow-lg',
+                isClickable && 'hover:scale-105 hover:shadow-lg cursor-pointer',
+                !isClickable && 'cursor-default',
                 isSelected && 'bg-primary text-primary-foreground shadow-glow-primary',
                 !isSelected && isCurrentDay && 'bg-accent text-accent-foreground ring-2 ring-primary/50',
-                !isSelected && !isCurrentDay && 'bg-muted/30 hover:bg-muted/50',
+                !isSelected && !isCurrentDay && 'bg-muted/30',
+                !isSelected && !isCurrentDay && isClickable && 'hover:bg-muted/50',
                 hasData && !isSelected && 'ring-2 ring-success/50'
               )}
             >
