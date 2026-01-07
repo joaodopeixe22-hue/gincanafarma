@@ -1,1 +1,4 @@
 project_id = "wucpfgesqsxoausnvwzj"
+
+[functions.check-achievements]
+verify_jwt = false

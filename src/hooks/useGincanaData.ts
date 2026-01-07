@@ -3,6 +3,7 @@ import { DailyData, TeamKPIs, TeamRanking, TEAMS } from '@/types/gincana';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { useAchievementChecker } from '@/hooks/useAchievementChecker';
 
 const emptyKPIs: TeamKPIs = { ofex: 0, apoio: 0, soria: 0, cadastro: 0 };
 
@@ -36,6 +37,7 @@ export function useGincanaData() {
   const [data, setData] = useState<Record<string, DailyData>>({});
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(true);
+  const { checkAchievements } = useAchievementChecker();
 
   // Fetch all data from database
   const fetchData = useCallback(async () => {
@@ -134,7 +136,10 @@ export function useGincanaData() {
       console.error('Error saving data:', error);
       throw error;
     }
-  }, []);
+
+    // Check for new achievements after data is saved
+    checkAchievements();
+  }, [checkAchievements]);
 
   const calculateRanking = useCallback((dates: Date[]): TeamRanking[] => {
     const totals = {
