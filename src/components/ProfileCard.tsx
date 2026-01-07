@@ -62,6 +62,9 @@ export function ProfileCard({
             <h2 className="text-2xl font-bold">
               {profile?.full_name || 'Usuário'}
             </h2>
+            {profile?.matricula && (
+              <p className="text-sm text-muted-foreground">Matrícula: {profile.matricula}</p>
+            )}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1">
               {team && (
                 <Badge className={cn(team.color, 'text-white')}>

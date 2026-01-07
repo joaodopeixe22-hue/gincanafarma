@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
-import { Trophy, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { Trophy, Hash, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,8 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
 const authSchema = z.object({
-  email: z.string().trim().email({ message: 'Email inválido' }).max(255),
-  password: z.string().min(6, { message: 'Senha deve ter no mínimo 6 caracteres' }).max(100),
+  matricula: z.string().trim().min(1, { message: 'Matrícula é obrigatória' }),
+  password: z.string().min(1, { message: 'Senha é obrigatória' }),
 });
 
 export default function Auth() {
@@ -19,10 +19,10 @@ export default function Auth() {
   const { toast } = useToast();
   const { signIn, isAuthenticated, isLoading: authLoading } = useAuth();
   
-  const [email, setEmail] = useState('');
+  const [matricula, setMatricula] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ matricula?: string; password?: string }>({});
 
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
@@ -31,11 +31,11 @@ export default function Auth() {
   }, [isAuthenticated, authLoading, navigate]);
 
   const validateForm = () => {
-    const result = authSchema.safeParse({ email, password });
+    const result = authSchema.safeParse({ matricula, password });
     if (!result.success) {
-      const fieldErrors: { email?: string; password?: string } = {};
+      const fieldErrors: { matricula?: string; password?: string } = {};
       result.error.errors.forEach((err) => {
-        if (err.path[0] === 'email') fieldErrors.email = err.message;
+        if (err.path[0] === 'matricula') fieldErrors.matricula = err.message;
         if (err.path[0] === 'password') fieldErrors.password = err.message;
       });
       setErrors(fieldErrors);
@@ -50,14 +50,14 @@ export default function Auth() {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(matricula, password);
     setIsLoading(false);
 
     if (error) {
       toast({
         title: 'Erro ao entrar',
         description: error.message === 'Invalid login credentials' 
-          ? 'Email ou senha incorretos' 
+          ? 'Matrícula ou senha incorretos' 
           : error.message,
         variant: 'destructive',
       });
@@ -96,26 +96,26 @@ export default function Auth() {
           <CardHeader className="text-center">
             <CardTitle>Acesse sua conta</CardTitle>
             <CardDescription>
-              Entre com suas credenciais para acessar o sistema
+              Entre com sua matrícula e senha para acessar o sistema
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
+                <Label htmlFor="login-matricula">Matrícula</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="login-matricula"
+                    type="text"
+                    placeholder="Sua matrícula"
+                    value={matricula}
+                    onChange={(e) => setMatricula(e.target.value)}
                     className="pl-10"
                   />
                 </div>
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email}</p>
+                {errors.matricula && (
+                  <p className="text-sm text-destructive">{errors.matricula}</p>
                 )}
               </div>
 

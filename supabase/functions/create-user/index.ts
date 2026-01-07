@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 interface CreateUserRequest {
-  email: string;
+  matricula: string;
   password: string;
   full_name: string;
   team_id: string | null;
@@ -65,12 +65,12 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body: CreateUserRequest = await req.json();
-    const { email, password, full_name, team_id, role } = body;
+    const { matricula, password, full_name, team_id, role } = body;
 
     // Validate required fields
-    if (!email || !password || !full_name || !role) {
+    if (!matricula || !password || !full_name || !role) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: email, password, full_name, role' }),
+        JSON.stringify({ error: 'Missing required fields: matricula, password, full_name, role' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -90,6 +90,27 @@ Deno.serve(async (req) => {
         persistSession: false,
       },
     });
+
+    // Check if matricula already exists
+    const { data: existingProfile, error: checkError } = await adminClient
+      .from('profiles')
+      .select('id')
+      .eq('matricula', matricula)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('Check matricula error:', checkError);
+    }
+
+    if (existingProfile) {
+      return new Response(
+        JSON.stringify({ error: 'Matrícula já cadastrada no sistema' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Generate fake email from matricula
+    const email = `${matricula}@gincana.local`;
 
     // Create the new user
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
@@ -112,10 +133,10 @@ Deno.serve(async (req) => {
     const userId = newUser.user.id;
     console.log('User created:', userId);
 
-    // Update profile with full_name and team_id
+    // Update profile with full_name, team_id, and matricula
     const { error: profileError } = await adminClient
       .from('profiles')
-      .update({ full_name, team_id })
+      .update({ full_name, team_id, matricula })
       .eq('id', userId);
 
     if (profileError) {
@@ -134,14 +155,14 @@ Deno.serve(async (req) => {
       // Don't fail the whole operation, just log
     }
 
-    console.log('User setup complete:', { userId, email, role, team_id });
+    console.log('User setup complete:', { userId, matricula, role, team_id });
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         user: { 
           id: userId, 
-          email, 
+          matricula, 
           full_name, 
           role, 
           team_id 
