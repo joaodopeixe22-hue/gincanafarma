@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -18,7 +17,7 @@ const authSchema = z.object({
 export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { signIn, isAuthenticated, isLoading: authLoading } = useAuth();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -71,36 +70,6 @@ export default function Auth() {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
-    setIsLoading(true);
-    const { error } = await signUp(email, password);
-    setIsLoading(false);
-
-    if (error) {
-      if (error.message.includes('already registered')) {
-        toast({
-          title: 'Email já cadastrado',
-          description: 'Este email já possui uma conta. Tente fazer login.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Erro ao cadastrar',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
-    } else {
-      toast({
-        title: 'Conta criada!',
-        description: 'Você foi cadastrado como membro. Faça login para continuar.',
-      });
-    }
-  };
-
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -127,122 +96,62 @@ export default function Auth() {
           <CardHeader className="text-center">
             <CardTitle>Acesse sua conta</CardTitle>
             <CardDescription>
-              Entre ou cadastre-se para gerenciar os KPIs
+              Entre com suas credenciais para acessar o sistema
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Entrar</TabsTrigger>
-                <TabsTrigger value="signup">Cadastrar</TabsTrigger>
-              </TabsList>
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="login-email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="login-email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email}</p>
+                )}
+              </div>
 
-              <TabsContent value="login">
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="login-email"
-                        type="email"
-                        placeholder="seu@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
-                    )}
-                  </div>
+              <div className="space-y-2">
+                <Label htmlFor="login-password">Senha</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="login-password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password}</p>
+                )}
+              </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Senha</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="login-password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                    {errors.password && (
-                      <p className="text-sm text-destructive">{errors.password}</p>
-                    )}
-                  </div>
+              <Button type="submit" className="w-full gap-2" disabled={isLoading}>
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    Entrar
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </Button>
+            </form>
 
-                  <Button type="submit" className="w-full gap-2" disabled={isLoading}>
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        Entrar
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="seu@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Senha</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                    {errors.password && (
-                      <p className="text-sm text-destructive">{errors.password}</p>
-                    )}
-                  </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    Ao se cadastrar, você será um <strong>Membro</strong> e poderá adicionar dados de KPIs.
-                  </p>
-
-                  <Button type="submit" className="w-full gap-2" disabled={isLoading}>
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        Criar conta
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              Não possui conta? Solicite ao administrador root para criar seu acesso.
+            </p>
           </CardContent>
         </Card>
       </div>

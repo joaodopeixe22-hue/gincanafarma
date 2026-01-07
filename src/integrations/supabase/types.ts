@@ -196,6 +196,42 @@ export type Database = {
           },
         ]
       }
+      user_daily_data: {
+        Row: {
+          apoio: number
+          cadastro: number
+          created_at: string | null
+          date: string
+          id: string
+          ofex: number
+          soria: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          apoio?: number
+          cadastro?: number
+          created_at?: string | null
+          date: string
+          id?: string
+          ofex?: number
+          soria?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          apoio?: number
+          cadastro?: number
+          created_at?: string | null
+          date?: string
+          id?: string
+          ofex?: number
+          soria?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -229,6 +265,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_root: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "member" | "root"

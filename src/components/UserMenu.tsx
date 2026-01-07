@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, LogOut, Shield, Users, Loader2, Settings } from 'lucide-react';
+import { User, LogOut, Shield, Users, Loader2, Settings, Crown, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 export function UserMenu() {
-  const { user, role, isAdmin, isMember, isAuthenticated, isLoading, signOut } = useAuth();
+  const { user, role, isRoot, isAdmin, isMember, isAuthenticated, isLoading, canManageUsers, signOut } = useAuth();
   const { toast } = useToast();
 
   const handleSignOut = async () => {
@@ -52,7 +52,15 @@ export function UserMenu() {
   }
 
   const getRoleBadge = () => {
-    if (isAdmin) {
+    if (isRoot) {
+      return (
+        <span className="flex items-center gap-1 text-xs font-medium text-rose-500">
+          <Crown className="w-3 h-3" />
+          Root
+        </span>
+      );
+    }
+    if (role === 'admin') {
       return (
         <span className="flex items-center gap-1 text-xs font-medium text-amber-500">
           <Shield className="w-3 h-3" />
@@ -60,7 +68,7 @@ export function UserMenu() {
         </span>
       );
     }
-    if (isMember) {
+    if (role === 'member') {
       return (
         <span className="flex items-center gap-1 text-xs font-medium text-primary">
           <Users className="w-3 h-3" />
@@ -77,7 +85,11 @@ export function UserMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
-          <User className="w-4 h-4" />
+          {isRoot ? (
+            <Crown className="w-4 h-4 text-rose-500" />
+          ) : (
+            <User className="w-4 h-4" />
+          )}
           <span className="hidden sm:inline max-w-24 truncate">
             {user?.email?.split('@')[0]}
           </span>

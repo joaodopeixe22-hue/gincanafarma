@@ -33,5 +33,5 @@ export interface UserWithProfile {
   id: string;
   email: string;
   profile: Profile | null;
-  role: 'admin' | 'member' | null;
+  role: 'root' | 'admin' | 'member' | null;
 }

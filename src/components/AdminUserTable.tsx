@@ -19,8 +19,9 @@ import {
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Loader2 } from 'lucide-react';
+import { Eye, Loader2, Crown, Shield, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 const teamConfig = {
   dna: { name: 'DNA', color: 'bg-blue-500' },
@@ -32,9 +33,10 @@ interface AdminUserTableProps {
   users: UserWithProfile[];
   onUpdateRole: (userId: string, role: 'admin' | 'member') => Promise<{ error: any }>;
   onUpdateProfile: (userId: string, data: { team_id?: string }) => Promise<{ error: any }>;
+  isRoot?: boolean;
 }
 
-export function AdminUserTable({ users, onUpdateRole, onUpdateProfile }: AdminUserTableProps) {
+export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, isRoot = false }: AdminUserTableProps) {
   const { toast } = useToast();
   const [loadingUser, setLoadingUser] = useState<string | null>(null);
 
@@ -75,6 +77,31 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile }: AdminUs
     }
   };
 
+  const getRoleBadge = (role: string | null) => {
+    if (role === 'root') {
+      return (
+        <Badge variant="outline" className="border-rose-500 text-rose-500 gap-1">
+          <Crown className="w-3 h-3" />
+          Root
+        </Badge>
+      );
+    }
+    if (role === 'admin') {
+      return (
+        <Badge variant="outline" className="border-amber-500 text-amber-500 gap-1">
+          <Shield className="w-3 h-3" />
+          Admin
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="border-primary text-primary gap-1">
+        <Users className="w-3 h-3" />
+        Membro
+      </Badge>
+    );
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -96,8 +123,12 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile }: AdminUs
               .toUpperCase()
               .slice(0, 2) || 'U';
 
+            // Root users can't have their role changed by anyone
+            const isUserRoot = user.role === 'root';
+            const canEditRole = isRoot && !isUserRoot;
+
             return (
-              <TableRow key={user.id}>
+              <TableRow key={user.id} className={cn(isUserRoot && 'bg-rose-500/5')}>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="w-8 h-8">
@@ -126,19 +157,25 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile }: AdminUs
                   </Select>
                 </TableCell>
                 <TableCell>
-                  <Select
-                    value={user.role || 'member'}
-                    onValueChange={(value) => handleRoleChange(user.id, value as 'admin' | 'member')}
-                    disabled={loadingUser === user.id}
-                  >
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="member">Membro</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {isUserRoot ? (
+                    getRoleBadge('root')
+                  ) : canEditRole ? (
+                    <Select
+                      value={user.role || 'member'}
+                      onValueChange={(value) => handleRoleChange(user.id, value as 'admin' | 'member')}
+                      disabled={loadingUser === user.id}
+                    >
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="member">Membro</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    getRoleBadge(user.role)
+                  )}
                 </TableCell>
                 <TableCell>
                   {loadingUser === user.id ? (
