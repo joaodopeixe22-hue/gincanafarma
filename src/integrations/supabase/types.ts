@@ -71,6 +71,33 @@ export type Database = {
         }
         Relationships: []
       }
+      gincana_goals: {
+        Row: {
+          created_at: string
+          id: string
+          kpi_type: string
+          period_type: string
+          target_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kpi_type: string
+          period_type: string
+          target_value?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kpi_type?: string
+          period_type?: string
+          target_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
