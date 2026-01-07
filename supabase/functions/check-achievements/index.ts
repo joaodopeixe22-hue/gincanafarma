@@ -177,6 +177,27 @@ Deno.serve(async (req) => {
           break;
         }
 
+        case 'kpi_daily_ofex':
+        case 'kpi_daily_apoio':
+        case 'kpi_daily_soria':
+        case 'kpi_daily_cadastro': {
+          // Check user daily data for KPI threshold
+          const { data: userDailyData } = await supabase
+            .from('user_daily_data')
+            .select('*')
+            .eq('user_id', user.id);
+
+          if (userDailyData && userDailyData.length > 0) {
+            // Extract KPI field name from requirement_type (e.g., 'kpi_daily_ofex' -> 'ofex')
+            const kpiField = reqType!.replace('kpi_daily_', '') as 'ofex' | 'apoio' | 'soria' | 'cadastro';
+            
+            // Check if any day has reached the required value
+            shouldUnlock = userDailyData.some(day => (day[kpiField] || 0) >= reqValue);
+            console.log(`${reqType} for ${kpiField}: checking if any day >= ${reqValue} = ${shouldUnlock}`);
+          }
+          break;
+        }
+
         // Note: 'first_daily' and 'goal_reached' require more context and should be checked at specific moments
       }
 

@@ -2,6 +2,7 @@ import { Achievement } from '@/types/profile';
 import { 
   Trophy, Star, Medal, Crown, Award, Target, Sparkles,
   CalendarCheck, CalendarHeart, TrendingUp, Sunrise, Footprints,
+  Circle, CircleDot,
   LucideIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,8 @@ const iconMap: Record<string, LucideIcon> = {
   'trending-up': TrendingUp,
   'sunrise': Sunrise,
   'footprints': Footprints,
+  'circle': Circle,
+  'circle-dot': CircleDot,
 };
 
 interface AchievementBadgeProps {
