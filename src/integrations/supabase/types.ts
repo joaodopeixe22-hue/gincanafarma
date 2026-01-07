@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      gincana_daily_data: {
+        Row: {
+          alcateia_apoio: number
+          alcateia_cadastro: number
+          alcateia_ofex: number
+          alcateia_soria: number
+          created_at: string
+          date: string
+          dna_apoio: number
+          dna_cadastro: number
+          dna_ofex: number
+          dna_soria: number
+          elite_apoio: number
+          elite_cadastro: number
+          elite_ofex: number
+          elite_soria: number
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          alcateia_apoio?: number
+          alcateia_cadastro?: number
+          alcateia_ofex?: number
+          alcateia_soria?: number
+          created_at?: string
+          date: string
+          dna_apoio?: number
+          dna_cadastro?: number
+          dna_ofex?: number
+          dna_soria?: number
+          elite_apoio?: number
+          elite_cadastro?: number
+          elite_ofex?: number
+          elite_soria?: number
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          alcateia_apoio?: number
+          alcateia_cadastro?: number
+          alcateia_ofex?: number
+          alcateia_soria?: number
+          created_at?: string
+          date?: string
+          dna_apoio?: number
+          dna_cadastro?: number
+          dna_ofex?: number
+          dna_soria?: number
+          elite_apoio?: number
+          elite_cadastro?: number
+          elite_ofex?: number
+          elite_soria?: number
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

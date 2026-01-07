@@ -1,27 +1,99 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DailyData, TeamKPIs, TeamRanking, TEAMS } from '@/types/gincana';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, parseISO } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
-const STORAGE_KEY = 'gincana_data';
+import { supabase } from '@/integrations/supabase/client';
 
 const emptyKPIs: TeamKPIs = { ofex: 0, apoio: 0, soria: 0, cadastro: 0 };
+
+interface DbRow {
+  id: string;
+  date: string;
+  dna_ofex: number;
+  dna_apoio: number;
+  dna_soria: number;
+  dna_cadastro: number;
+  elite_ofex: number;
+  elite_apoio: number;
+  elite_soria: number;
+  elite_cadastro: number;
+  alcateia_ofex: number;
+  alcateia_apoio: number;
+  alcateia_soria: number;
+  alcateia_cadastro: number;
+}
+
+const dbRowToDailyData = (row: DbRow): DailyData => ({
+  date: row.date,
+  teams: {
+    dna: { ofex: row.dna_ofex, apoio: row.dna_apoio, soria: row.dna_soria, cadastro: row.dna_cadastro },
+    elite: { ofex: row.elite_ofex, apoio: row.elite_apoio, soria: row.elite_soria, cadastro: row.elite_cadastro },
+    alcateia: { ofex: row.alcateia_ofex, apoio: row.alcateia_apoio, soria: row.alcateia_soria, cadastro: row.alcateia_cadastro },
+  },
+});
 
 export function useGincanaData() {
   const [data, setData] = useState<Record<string, DailyData>>({});
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      setData(JSON.parse(stored));
+  // Fetch all data from database
+  const fetchData = useCallback(async () => {
+    const { data: rows, error } = await supabase
+      .from('gincana_daily_data')
+      .select('*');
+
+    if (error) {
+      console.error('Error fetching data:', error);
+      return;
     }
+
+    const newData: Record<string, DailyData> = {};
+    rows?.forEach((row) => {
+      newData[row.date] = dbRowToDailyData(row as DbRow);
+    });
+    setData(newData);
+    setIsLoading(false);
   }, []);
 
-  const saveData = useCallback((newData: Record<string, DailyData>) => {
-    setData(newData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-  }, []);
+  // Initial fetch and realtime subscription
+  useEffect(() => {
+    fetchData();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('gincana-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'gincana_daily_data',
+        },
+        (payload) => {
+          console.log('Realtime update:', payload);
+          if (payload.eventType === 'DELETE') {
+            setData((prev) => {
+              const newData = { ...prev };
+              const oldRow = payload.old as DbRow;
+              delete newData[oldRow.date];
+              return newData;
+            });
+          } else {
+            const row = payload.new as DbRow;
+            setData((prev) => ({
+              ...prev,
+              [row.date]: dbRowToDailyData(row),
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchData]);
 
   const getDayData = useCallback((date: Date): DailyData => {
     const dateKey = format(date, 'yyyy-MM-dd');
@@ -35,11 +107,34 @@ export function useGincanaData() {
     };
   }, [data]);
 
-  const setDayData = useCallback((date: Date, dayData: DailyData) => {
+  const setDayData = useCallback(async (date: Date, dayData: DailyData) => {
     const dateKey = format(date, 'yyyy-MM-dd');
-    const newData = { ...data, [dateKey]: dayData };
-    saveData(newData);
-  }, [data, saveData]);
+    
+    const dbData = {
+      date: dateKey,
+      dna_ofex: dayData.teams.dna.ofex,
+      dna_apoio: dayData.teams.dna.apoio,
+      dna_soria: dayData.teams.dna.soria,
+      dna_cadastro: dayData.teams.dna.cadastro,
+      elite_ofex: dayData.teams.elite.ofex,
+      elite_apoio: dayData.teams.elite.apoio,
+      elite_soria: dayData.teams.elite.soria,
+      elite_cadastro: dayData.teams.elite.cadastro,
+      alcateia_ofex: dayData.teams.alcateia.ofex,
+      alcateia_apoio: dayData.teams.alcateia.apoio,
+      alcateia_soria: dayData.teams.alcateia.soria,
+      alcateia_cadastro: dayData.teams.alcateia.cadastro,
+    };
+
+    const { error } = await supabase
+      .from('gincana_daily_data')
+      .upsert(dbData, { onConflict: 'date' });
+
+    if (error) {
+      console.error('Error saving data:', error);
+      throw error;
+    }
+  }, []);
 
   const calculateRanking = useCallback((dates: Date[]): TeamRanking[] => {
     const totals = {
@@ -105,5 +200,6 @@ export function useGincanaData() {
     getWeeklyRanking,
     getMonthlyRanking,
     hasDataForDay,
+    isLoading,
   };
 }
