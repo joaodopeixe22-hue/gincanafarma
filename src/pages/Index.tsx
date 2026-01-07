@@ -5,12 +5,14 @@ import { Trophy, Calendar, TrendingUp, Target, Flame, Medal } from 'lucide-react
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GincanaCalendar } from '@/components/GincanaCalendar';
 import { DataInputModal } from '@/components/DataInputModal';
+import { IndividualDataInputModal } from '@/components/IndividualDataInputModal';
 import { RankingPodium } from '@/components/RankingPodium';
 import { StatsOverview } from '@/components/StatsOverview';
 import { GoalsProgress } from '@/components/GoalsProgress';
 import { AchievementRankingPodium } from '@/components/AchievementRankingPodium';
 import { UserMenu } from '@/components/UserMenu';
 import { useGincanaData } from '@/hooks/useGincanaData';
+import { useUserDailyData } from '@/hooks/useUserDailyData';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
@@ -27,40 +29,32 @@ const Index = () => {
     hasDataForDay,
   } = useGincanaData();
 
-  const { isAdmin, isMember, isAuthenticated } = useAuth();
+  const { isAdmin, isRoot, isMember, isAuthenticated, role } = useAuth();
+  const { getDataForDate, hasDataForDate, saveData } = useUserDailyData();
   const { toast } = useToast();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isIndividualModalOpen, setIsIndividualModalOpen] = useState(false);
   const [modalDate, setModalDate] = useState<Date>(new Date());
 
-  const canAddData = isAdmin || isMember;
-  const canEditData = isAdmin;
+  // Root e Admin podem editar dados da equipe
+  const canEditTeamData = isRoot || isAdmin;
+  // Apenas membros (não admins/root) usam o modal individual
+  const isMemberOnly = role === 'member';
 
   const handleDayClick = (date: Date) => {
-    const dayHasData = hasDataForDay(date);
-
     // Visitantes não podem abrir o modal
     if (!isAuthenticated) {
       toast({
         title: 'Acesso restrito',
-        description: 'Faça login para adicionar ou editar dados',
+        description: 'Faça login para adicionar dados',
         variant: 'destructive',
       });
       return;
     }
 
-    // Membros só podem adicionar em dias sem dados
-    if (isMember && dayHasData) {
-      toast({
-        title: 'Dados já registrados',
-        description: 'Apenas administradores podem editar dados já salvos',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Membros sem papel não podem fazer nada
-    if (!canAddData) {
+    // Usuário sem papel definido
+    if (!isMember) {
       toast({
         title: 'Sem permissão',
         description: 'Você não tem permissão para adicionar dados. Contate um administrador.',
@@ -71,11 +65,35 @@ const Index = () => {
 
     setModalDate(date);
     setSelectedDate(date);
-    setIsModalOpen(true);
+
+    // Membros (não admin/root) usam modal individual
+    if (isMemberOnly) {
+      setIsIndividualModalOpen(true);
+    } else {
+      // Admin/Root usam modal de equipe
+      setIsModalOpen(true);
+    }
   };
 
-  const handleSaveData = (data: Parameters<typeof setDayData>[1]) => {
+  const handleSaveTeamData = (data: Parameters<typeof setDayData>[1]) => {
     setDayData(modalDate, data);
+  };
+
+  const handleSaveIndividualData = async (data: { ofex: number; apoio: number; soria: number; cadastro: number }) => {
+    try {
+      await saveData(modalDate, data);
+      toast({
+        title: 'Dados salvos!',
+        description: 'Seus KPIs foram registrados com sucesso.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar seus dados. Tente novamente.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
   };
 
   const dailyRanking = getDailyRanking(selectedDate);
@@ -84,6 +102,10 @@ const Index = () => {
 
   const weekStart = startOfWeek(selectedDate, { locale: ptBR });
   const weekEnd = endOfWeek(selectedDate, { locale: ptBR });
+
+  // Dados individuais para o modal
+  const individualData = getDataForDate(modalDate);
+  const hasIndividualData = hasDataForDate(modalDate);
 
   return (
     <div className="min-h-screen bg-background">
@@ -160,8 +182,10 @@ const Index = () => {
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-foreground">Calendário de KPIs</h2>
                 <p className="text-muted-foreground">
-                  {canAddData 
-                    ? 'Clique em um dia para inserir ou editar os dados' 
+                  {isMember 
+                    ? isMemberOnly 
+                      ? 'Clique em um dia para registrar seus KPIs individuais'
+                      : 'Clique em um dia para inserir ou editar os dados da equipe'
                     : 'Faça login para adicionar dados'}
                 </p>
               </div>
@@ -170,8 +194,8 @@ const Index = () => {
                   selectedDate={selectedDate}
                   onSelectDate={setSelectedDate}
                   hasDataForDay={hasDataForDay}
-                  canEdit={canEditData}
-                  canAdd={canAddData}
+                  canEdit={canEditTeamData}
+                  canAdd={isMember}
                   onDayClick={handleDayClick}
                 />
               </div>
@@ -239,14 +263,25 @@ const Index = () => {
         </Tabs>
       </main>
 
+      {/* Modal para Admin/Root - dados de equipe */}
       <DataInputModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         date={modalDate}
         initialData={getDayData(modalDate)}
-        onSave={handleSaveData}
+        onSave={handleSaveTeamData}
         isAdmin={isAdmin}
         hasExistingData={hasDataForDay(modalDate)}
+      />
+
+      {/* Modal para Membros - dados individuais */}
+      <IndividualDataInputModal
+        isOpen={isIndividualModalOpen}
+        onClose={() => setIsIndividualModalOpen(false)}
+        date={modalDate}
+        initialData={individualData}
+        onSave={handleSaveIndividualData}
+        hasExistingData={hasIndividualData}
       />
     </div>
   );

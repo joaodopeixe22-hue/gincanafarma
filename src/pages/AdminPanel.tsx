@@ -5,16 +5,18 @@ import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { useAchievements } from '@/hooks/useAchievements';
 import { AdminUserTable } from '@/components/AdminUserTable';
 import { GrantAchievementModal } from '@/components/GrantAchievementModal';
+import { CreateUserModal } from '@/components/CreateUserModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Loader2, Users, Trophy, Award } from 'lucide-react';
+import { ArrowLeft, Loader2, Users, Trophy, Award, UserPlus, Crown } from 'lucide-react';
 
 export default function AdminPanel() {
-  const { isAdmin, isLoading: authLoading } = useAuth();
-  const { users, isLoading: usersLoading, updateUserRole, updateUserProfile } = useAdminUsers();
+  const { isAdmin, isRoot, isLoading: authLoading, canManageUsers } = useAuth();
+  const { users, isLoading: usersLoading, updateUserRole, updateUserProfile, refetch } = useAdminUsers();
   const { achievements, grantAchievement } = useAchievements();
   const [grantModalOpen, setGrantModalOpen] = useState(false);
+  const [createUserModalOpen, setCreateUserModalOpen] = useState(false);
 
   if (authLoading) {
     return (
@@ -38,7 +40,15 @@ export default function AdminPanel() {
               Voltar
             </Link>
           </Button>
-          <h1 className="text-xl font-bold">Painel Administrativo</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold">Painel Administrativo</h1>
+            {isRoot && (
+              <span className="flex items-center gap-1 text-xs font-medium text-rose-500 bg-rose-500/10 px-2 py-1 rounded-full">
+                <Crown className="w-3 h-3" />
+                Root
+              </span>
+            )}
+          </div>
           <div className="w-20" /> {/* Spacer for centering */}
         </div>
       </header>
@@ -59,13 +69,23 @@ export default function AdminPanel() {
           <TabsContent value="users">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Gerenciar Usuários
-                </CardTitle>
-                <CardDescription>
-                  Gerencie os usuários, suas equipes e papéis (Admin/Membro)
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      Gerenciar Usuários
+                    </CardTitle>
+                    <CardDescription>
+                      Gerencie os usuários, suas equipes e papéis
+                    </CardDescription>
+                  </div>
+                  {canManageUsers && (
+                    <Button onClick={() => setCreateUserModalOpen(true)} className="gap-2">
+                      <UserPlus className="w-4 h-4" />
+                      Criar Usuário
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 {usersLoading ? (
@@ -81,6 +101,7 @@ export default function AdminPanel() {
                     users={users}
                     onUpdateRole={updateUserRole}
                     onUpdateProfile={updateUserProfile}
+                    isRoot={isRoot}
                   />
                 )}
               </CardContent>
@@ -143,6 +164,12 @@ export default function AdminPanel() {
         users={users}
         achievements={achievements}
         onGrant={grantAchievement}
+      />
+
+      <CreateUserModal
+        open={createUserModalOpen}
+        onOpenChange={setCreateUserModalOpen}
+        onUserCreated={refetch}
       />
     </div>
   );

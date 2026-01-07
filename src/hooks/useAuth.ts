@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-type AppRole = 'admin' | 'member' | null;
+type AppRole = 'root' | 'admin' | 'member' | null;
 
 interface AuthState {
   user: User | null;
@@ -113,8 +113,10 @@ export function useAuth() {
     user,
     session,
     role,
-    isAdmin: role === 'admin',
-    isMember: role === 'member',
+    isRoot: role === 'root',
+    isAdmin: role === 'admin' || role === 'root', // root herda admin
+    isMember: role === 'member' || role === 'admin' || role === 'root', // todos herdam member
+    canManageUsers: role === 'root', // apenas root pode criar usuários
     isAuthenticated: !!session,
     isLoading,
     signIn,
