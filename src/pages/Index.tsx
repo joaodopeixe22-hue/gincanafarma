@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Trophy, Calendar, TrendingUp, Target, Flame } from 'lucide-react';
+import { Trophy, Calendar, TrendingUp, Target, Flame, Medal } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GincanaCalendar } from '@/components/GincanaCalendar';
 import { DataInputModal } from '@/components/DataInputModal';
 import { RankingPodium } from '@/components/RankingPodium';
 import { StatsOverview } from '@/components/StatsOverview';
 import { GoalsProgress } from '@/components/GoalsProgress';
+import { AchievementRankingPodium } from '@/components/AchievementRankingPodium';
 import { UserMenu } from '@/components/UserMenu';
 import { useGincanaData } from '@/hooks/useGincanaData';
 import { useAuth } from '@/hooks/useAuth';
@@ -112,7 +113,7 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="calendario" className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full max-w-2xl mx-auto bg-muted/50 p-1 rounded-xl">
+          <TabsList className="grid grid-cols-5 w-full max-w-3xl mx-auto bg-muted/50 p-1 rounded-xl">
             <TabsTrigger 
               value="calendario" 
               className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
@@ -140,6 +141,13 @@ const Index = () => {
             >
               <Trophy className="w-4 h-4" />
               <span className="hidden sm:inline">Mensal</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="conquistas"
+              className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
+            >
+              <Medal className="w-4 h-4" />
+              <span className="hidden sm:inline">Conquistas</span>
             </TabsTrigger>
           </TabsList>
 
@@ -216,6 +224,16 @@ const Index = () => {
                 title="Ranking Mensal"
                 subtitle={format(selectedDate, "MMMM 'de' yyyy", { locale: ptBR })}
               />
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="conquistas" className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <AchievementRankingPodium />
             </motion.div>
           </TabsContent>
         </Tabs>
