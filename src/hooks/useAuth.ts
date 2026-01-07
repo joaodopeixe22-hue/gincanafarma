@@ -78,9 +78,10 @@ export function useAuth() {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (matricula: string, password: string) => {
+    const fakeEmail = `${matricula}@gincana.local`;
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: fakeEmail,
       password,
     });
     return { error };

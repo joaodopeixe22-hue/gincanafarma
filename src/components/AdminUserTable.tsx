@@ -135,9 +135,16 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, isRoot = 
                       <AvatarImage src={user.profile?.avatar_url || undefined} />
                       <AvatarFallback className="text-xs">{initials}</AvatarFallback>
                     </Avatar>
-                    <span className="font-medium">
-                      {user.profile?.full_name || 'Sem nome'}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="font-medium">
+                        {user.profile?.full_name || 'Sem nome'}
+                      </span>
+                      {user.profile?.matricula && (
+                        <span className="text-xs text-muted-foreground">
+                          Mat: {user.profile.matricula}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell>

@@ -4,6 +4,7 @@ export interface Profile {
   avatar_url: string | null;
   team_id: 'dna' | 'elite' | 'alcateia' | null;
   bio: string | null;
+  matricula: string | null;
   created_at: string;
   updated_at: string;
 }
