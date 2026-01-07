@@ -16,10 +16,15 @@ interface DataInputModalProps {
   date: Date;
   initialData: DailyData;
   onSave: (data: DailyData) => void;
+  isAdmin?: boolean;
+  hasExistingData?: boolean;
 }
 
-export function DataInputModal({ isOpen, onClose, date, initialData, onSave }: DataInputModalProps) {
+export function DataInputModal({ isOpen, onClose, date, initialData, onSave, isAdmin = false, hasExistingData = false }: DataInputModalProps) {
   const [formData, setFormData] = useState<DailyData>(initialData);
+  
+  // Membros não podem editar dados existentes
+  const isReadOnly = hasExistingData && !isAdmin;
 
   useEffect(() => {
     setFormData(initialData);
@@ -57,11 +62,16 @@ export function DataInputModal({ isOpen, onClose, date, initialData, onSave }: D
             <div className="p-2 rounded-lg bg-primary/10">
               <Target className="w-5 h-5 text-primary" />
             </div>
-            <span>Registrar KPIs</span>
+            <span>{isReadOnly ? 'Visualizar KPIs' : 'Registrar KPIs'}</span>
             <span className="text-muted-foreground font-normal">
               — {format(date, "EEEE, d 'de' MMMM", { locale: ptBR })}
             </span>
           </DialogTitle>
+          {isReadOnly && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Apenas administradores podem editar dados já salvos.
+            </p>
+          )}
         </DialogHeader>
 
         <div className="grid gap-6 py-4">
@@ -93,7 +103,8 @@ export function DataInputModal({ isOpen, onClose, date, initialData, onSave }: D
                       min="0"
                       value={formData.teams[teamId][kpi] || ''}
                       onChange={(e) => handleInputChange(teamId, kpi, e.target.value)}
-                      className="bg-background/50 border-border/50 text-center text-lg font-semibold focus:ring-2 focus:ring-primary/50"
+                      disabled={isReadOnly}
+                      className="bg-background/50 border-border/50 text-center text-lg font-semibold focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
                       placeholder="0"
                     />
                   </div>
@@ -105,12 +116,14 @@ export function DataInputModal({ isOpen, onClose, date, initialData, onSave }: D
 
         <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
           <Button variant="outline" onClick={onClose}>
-            Cancelar
+            {isReadOnly ? 'Fechar' : 'Cancelar'}
           </Button>
-          <Button onClick={handleSave} className="gap-2">
-            <Save className="w-4 h-4" />
-            Salvar Dados
-          </Button>
+          {!isReadOnly && (
+            <Button onClick={handleSave} className="gap-2">
+              <Save className="w-4 h-4" />
+              Salvar Dados
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

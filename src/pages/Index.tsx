@@ -8,7 +8,10 @@ import { DataInputModal } from '@/components/DataInputModal';
 import { RankingPodium } from '@/components/RankingPodium';
 import { StatsOverview } from '@/components/StatsOverview';
 import { GoalsProgress } from '@/components/GoalsProgress';
+import { UserMenu } from '@/components/UserMenu';
 import { useGincanaData } from '@/hooks/useGincanaData';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 
 const Index = () => {
@@ -23,10 +26,48 @@ const Index = () => {
     hasDataForDay,
   } = useGincanaData();
 
+  const { isAdmin, isMember, isAuthenticated } = useAuth();
+  const { toast } = useToast();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalDate, setModalDate] = useState<Date>(new Date());
 
+  const canAddData = isAdmin || isMember;
+  const canEditData = isAdmin;
+
   const handleDayClick = (date: Date) => {
+    const dayHasData = hasDataForDay(date);
+
+    // Visitantes não podem abrir o modal
+    if (!isAuthenticated) {
+      toast({
+        title: 'Acesso restrito',
+        description: 'Faça login para adicionar ou editar dados',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Membros só podem adicionar em dias sem dados
+    if (isMember && dayHasData) {
+      toast({
+        title: 'Dados já registrados',
+        description: 'Apenas administradores podem editar dados já salvos',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Membros sem papel não podem fazer nada
+    if (!canAddData) {
+      toast({
+        title: 'Sem permissão',
+        description: 'Você não tem permissão para adicionar dados. Contate um administrador.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setModalDate(date);
     setSelectedDate(date);
     setIsModalOpen(true);
@@ -58,9 +99,12 @@ const Index = () => {
                 <p className="text-xs text-muted-foreground">Gincana Farma 2025</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
-              <Flame className="w-4 h-4" />
-              <span>Competição Ativa</span>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                <Flame className="w-4 h-4" />
+                <span>Competição Ativa</span>
+              </div>
+              <UserMenu />
             </div>
           </div>
         </div>
@@ -107,13 +151,19 @@ const Index = () => {
             >
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-foreground">Calendário de KPIs</h2>
-                <p className="text-muted-foreground">Clique em um dia para inserir ou editar os dados</p>
+                <p className="text-muted-foreground">
+                  {canAddData 
+                    ? 'Clique em um dia para inserir ou editar os dados' 
+                    : 'Faça login para adicionar dados'}
+                </p>
               </div>
               <div className="max-w-lg mx-auto">
                 <GincanaCalendar
                   selectedDate={selectedDate}
                   onSelectDate={setSelectedDate}
                   hasDataForDay={hasDataForDay}
+                  canEdit={canEditData}
+                  canAdd={canAddData}
                   onDayClick={handleDayClick}
                 />
               </div>
@@ -127,7 +177,7 @@ const Index = () => {
               transition={{ duration: 0.4 }}
               className="space-y-6"
             >
-              <GoalsProgress dailyRanking={dailyRanking} weeklyRanking={weeklyRanking} />
+              <GoalsProgress dailyRanking={dailyRanking} weeklyRanking={weeklyRanking} isAdmin={isAdmin} />
               <StatsOverview rankings={dailyRanking} period="diário" />
               <RankingPodium
                 rankings={dailyRanking}
@@ -177,6 +227,8 @@ const Index = () => {
         date={modalDate}
         initialData={getDayData(modalDate)}
         onSave={handleSaveData}
+        isAdmin={isAdmin}
+        hasExistingData={hasDataForDay(modalDate)}
       />
     </div>
   );

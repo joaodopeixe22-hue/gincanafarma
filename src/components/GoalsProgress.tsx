@@ -13,6 +13,7 @@ import { Confetti } from './Confetti';
 interface GoalsProgressProps {
   dailyRanking: TeamRanking[];
   weeklyRanking: TeamRanking[];
+  isAdmin?: boolean;
 }
 
 const kpiLabels: Record<string, string> = {
@@ -23,7 +24,7 @@ const kpiLabels: Record<string, string> = {
   total: 'Total Geral',
 };
 
-export function GoalsProgress({ dailyRanking, weeklyRanking }: GoalsProgressProps) {
+export function GoalsProgress({ dailyRanking, weeklyRanking, isAdmin = false }: GoalsProgressProps) {
   const { getGoal, updateGoal, isLoading } = useGoals();
   const [editingGoal, setEditingGoal] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -164,14 +165,16 @@ export function GoalsProgress({ dailyRanking, weeklyRanking }: GoalsProgressProp
                 <span className="text-sm text-muted-foreground">
                   {current} / {goal}
                 </span>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-6 w-6"
-                  onClick={() => handleEdit(periodType, kpiType, goal)}
-                >
-                  <Edit2 className="w-3 h-3" />
-                </Button>
+                {isAdmin && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6"
+                    onClick={() => handleEdit(periodType, kpiType, goal)}
+                  >
+                    <Edit2 className="w-3 h-3" />
+                  </Button>
+                )}
               </>
             )}
           </div>
