@@ -7,6 +7,7 @@ import { GincanaCalendar } from '@/components/GincanaCalendar';
 import { DataInputModal } from '@/components/DataInputModal';
 import { RankingPodium } from '@/components/RankingPodium';
 import { StatsOverview } from '@/components/StatsOverview';
+import { GoalsProgress } from '@/components/GoalsProgress';
 import { useGincanaData } from '@/hooks/useGincanaData';
 import { motion } from 'framer-motion';
 
@@ -126,6 +127,7 @@ const Index = () => {
               transition={{ duration: 0.4 }}
               className="space-y-6"
             >
+              <GoalsProgress dailyRanking={dailyRanking} weeklyRanking={weeklyRanking} />
               <StatsOverview rankings={dailyRanking} period="diário" />
               <RankingPodium
                 rankings={dailyRanking}
