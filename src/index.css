@@ -2,87 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* DNA de Campeões - Gincana Design System */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 220 20% 97%;
+    --foreground: 220 30% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 30% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 30% 10%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 220 90% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 220 20% 92%;
+    --secondary-foreground: 220 30% 20%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 15% 94%;
+    --muted-foreground: 220 10% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 260 80% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 220 90% 50%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Team Colors */
+    --team-dna: 45 100% 50%;
+    --team-dna-foreground: 45 100% 10%;
+    --team-elite: 190 90% 45%;
+    --team-elite-foreground: 0 0% 100%;
+    --team-alcateia: 270 70% 55%;
+    --team-alcateia-foreground: 0 0% 100%;
+
+    /* Status Colors */
+    --success: 150 80% 40%;
+    --warning: 45 100% 50%;
+    --info: 200 90% 50%;
+
+    /* Shadows and Glows */
+    --shadow-glow: 0 0 40px -10px hsl(var(--primary) / 0.3);
+    --shadow-glow-primary: 0 0 30px -5px hsl(var(--primary) / 0.5);
+    --shadow-glow-warning: 0 0 30px -5px hsl(var(--warning) / 0.5);
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 220 25% 8%;
+    --foreground: 220 10% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 220 25% 12%;
+    --card-foreground: 220 10% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 25% 10%;
+    --popover-foreground: 220 10% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 220 90% 55%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 20% 18%;
+    --secondary-foreground: 220 10% 90%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 220 20% 16%;
+    --muted-foreground: 220 10% 55%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 260 80% 65%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 220 90% 55%;
+
+    /* Team Colors - Dark Mode */
+    --team-dna: 45 100% 55%;
+    --team-dna-foreground: 45 100% 10%;
+    --team-elite: 190 90% 50%;
+    --team-elite-foreground: 0 0% 100%;
+    --team-alcateia: 270 70% 60%;
+    --team-alcateia-foreground: 0 0% 100%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -100,6 +118,137 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  .shadow-glow-primary {
+    box-shadow: var(--shadow-glow-primary);
+  }
+  
+  .shadow-glow-warning {
+    box-shadow: var(--shadow-glow-warning);
+  }
+
+  .bg-team-dna {
+    background-color: hsl(var(--team-dna));
+  }
+  
+  .bg-team-dna\/5 {
+    background-color: hsl(var(--team-dna) / 0.05);
+  }
+  
+  .bg-team-dna\/20 {
+    background-color: hsl(var(--team-dna) / 0.2);
+  }
+  
+  .text-team-dna {
+    color: hsl(var(--team-dna));
+  }
+  
+  .text-team-dna-foreground {
+    color: hsl(var(--team-dna-foreground));
+  }
+  
+  .border-team-dna {
+    border-color: hsl(var(--team-dna));
+  }
+  
+  .border-team-dna\/30 {
+    border-color: hsl(var(--team-dna) / 0.3);
+  }
+
+  .bg-team-elite {
+    background-color: hsl(var(--team-elite));
+  }
+  
+  .bg-team-elite\/5 {
+    background-color: hsl(var(--team-elite) / 0.05);
+  }
+  
+  .bg-team-elite\/20 {
+    background-color: hsl(var(--team-elite) / 0.2);
+  }
+  
+  .text-team-elite {
+    color: hsl(var(--team-elite));
+  }
+  
+  .text-team-elite-foreground {
+    color: hsl(var(--team-elite-foreground));
+  }
+  
+  .border-team-elite {
+    border-color: hsl(var(--team-elite));
+  }
+  
+  .border-team-elite\/30 {
+    border-color: hsl(var(--team-elite) / 0.3);
+  }
+
+  .bg-team-alcateia {
+    background-color: hsl(var(--team-alcateia));
+  }
+  
+  .bg-team-alcateia\/5 {
+    background-color: hsl(var(--team-alcateia) / 0.05);
+  }
+  
+  .bg-team-alcateia\/20 {
+    background-color: hsl(var(--team-alcateia) / 0.2);
+  }
+  
+  .text-team-alcateia {
+    color: hsl(var(--team-alcateia));
+  }
+  
+  .text-team-alcateia-foreground {
+    color: hsl(var(--team-alcateia-foreground));
+  }
+  
+  .border-team-alcateia {
+    border-color: hsl(var(--team-alcateia));
+  }
+  
+  .border-team-alcateia\/30 {
+    border-color: hsl(var(--team-alcateia) / 0.3);
+  }
+
+  .text-success {
+    color: hsl(var(--success));
+  }
+  
+  .bg-success {
+    background-color: hsl(var(--success));
+  }
+  
+  .ring-success\/50 {
+    --tw-ring-color: hsl(var(--success) / 0.5);
+  }
+
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+  
+  .bg-warning {
+    background-color: hsl(var(--warning));
+  }
+  
+  .bg-warning\/5 {
+    background-color: hsl(var(--warning) / 0.05);
+  }
+  
+  .bg-warning\/20 {
+    background-color: hsl(var(--warning) / 0.2);
+  }
+  
+  .border-warning\/50 {
+    border-color: hsl(var(--warning) / 0.5);
   }
 }
