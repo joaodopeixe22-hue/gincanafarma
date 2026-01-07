@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { z } from 'zod';
-import { UserPlus, Mail, Lock, User, Users, Loader2 } from 'lucide-react';
+import { UserPlus, IdCard, Lock, User, Users, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const createUserSchema = z.object({
-  email: z.string().email({ message: 'Email inválido' }),
+  matricula: z.string()
+    .min(3, { message: 'Matrícula deve ter no mínimo 3 caracteres' })
+    .regex(/^[a-zA-Z0-9._-]+$/, { message: 'Matrícula só pode conter letras, números, pontos, hífens e underscores' }),
   password: z.string().min(6, { message: 'Senha deve ter no mínimo 6 caracteres' }),
   full_name: z.string().min(2, { message: 'Nome deve ter no mínimo 2 caracteres' }),
   team_id: z.enum(['dna', 'elite', 'alcateia']).optional(),
@@ -35,7 +37,7 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   const [formData, setFormData] = useState({
-    email: '',
+    matricula: '',
     password: '',
     full_name: '',
     team_id: '' as string,
@@ -44,7 +46,7 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
 
   const resetForm = () => {
     setFormData({
-      email: '',
+      matricula: '',
       password: '',
       full_name: '',
       team_id: '',
@@ -77,7 +79,7 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
     try {
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
-          email: formData.email,
+          matricula: formData.matricula,
           password: formData.password,
           full_name: formData.full_name,
           team_id: formData.team_id || null,
@@ -138,19 +140,18 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="matricula">Matrícula (Login)</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                id="email"
-                type="email"
-                placeholder="joao@empresa.com"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                id="matricula"
+                placeholder="joao.silva ou 123456"
+                value={formData.matricula}
+                onChange={(e) => setFormData(prev => ({ ...prev, matricula: e.target.value }))}
                 className="pl-10"
               />
             </div>
-            {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+            {errors.matricula && <p className="text-sm text-destructive">{errors.matricula}</p>}
           </div>
 
           <div className="space-y-2">
