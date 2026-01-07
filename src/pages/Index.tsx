@@ -119,8 +119,8 @@ const Index = () => {
                 <Trophy className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">DNA de Campeões</h1>
-                <p className="text-xs text-muted-foreground">Gincana Farma 2025</p>
+                <h1 className="text-xl font-bold text-foreground">Circuito Farma</h1>
+                <p className="text-xs text-muted-foreground">Gincana 2025</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
