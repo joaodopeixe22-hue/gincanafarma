@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, LogOut, Shield, Users, Loader2 } from 'lucide-react';
+import { User, LogOut, Shield, Users, Loader2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -90,6 +90,21 @@ export function UserMenu() {
             {getRoleBadge()}
           </div>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link to="/profile">
+            <User className="w-4 h-4 mr-2" />
+            Meu Perfil
+          </Link>
+        </DropdownMenuItem>
+        {isAdmin && (
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link to="/admin">
+              <Settings className="w-4 h-4 mr-2" />
+              Painel Admin
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
           <LogOut className="w-4 h-4 mr-2" />
