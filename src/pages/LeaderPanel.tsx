@@ -146,6 +146,9 @@ export default function LeaderPanel() {
                       avatar_url={member.avatar_url}
                       totals={member.totals}
                       rank={index + 1}
+                      goals={member.goals}
+                      dailyTotals={member.dailyTotals}
+                      showGoalsButton={true}
                     />
                   ))}
                 </div>
