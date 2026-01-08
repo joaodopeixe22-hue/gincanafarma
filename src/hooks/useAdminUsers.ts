@@ -26,7 +26,7 @@ export function useAdminUsers() {
           id: profile.id,
           email: '', // We can't get email from profiles, will need to handle differently
           profile: profile as any,
-          role: userRole?.role as 'admin' | 'member' | null || null,
+          role: userRole?.role as 'admin' | 'lider' | 'member' | null || null,
         };
       });
       setUsers(usersWithRoles);
@@ -35,7 +35,7 @@ export function useAdminUsers() {
     setIsLoading(false);
   };
 
-  const updateUserRole = async (userId: string, role: 'admin' | 'member') => {
+  const updateUserRole = async (userId: string, role: 'admin' | 'lider' | 'member') => {
     // Check if user already has a role
     const { data: existing } = await supabase
       .from('user_roles')

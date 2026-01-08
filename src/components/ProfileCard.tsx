@@ -14,7 +14,7 @@ const teamConfig = {
 
 interface ProfileCardProps {
   profile: Profile | null;
-  role?: 'root' | 'admin' | 'member' | null;
+  role?: 'root' | 'admin' | 'lider' | 'member' | null;
   totalPoints: number;
   achievementsCount: number;
   canEdit: boolean;
@@ -79,6 +79,11 @@ export function ProfileCard({
               {role === 'admin' && (
                 <Badge variant="outline" className="border-amber-500 text-amber-500">
                   Admin
+                </Badge>
+              )}
+              {role === 'lider' && (
+                <Badge variant="outline" className="border-emerald-500 text-emerald-500">
+                  Líder
                 </Badge>
               )}
               {role === 'member' && (
