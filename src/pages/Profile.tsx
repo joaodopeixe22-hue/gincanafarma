@@ -3,8 +3,10 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useAchievements } from '@/hooks/useAchievements';
+import { useUserHistory } from '@/hooks/useUserHistory';
 import { ProfileCard } from '@/components/ProfileCard';
 import { AchievementList } from '@/components/AchievementList';
+import { UserHistoryCard } from '@/components/UserHistoryCard';
 import { EditProfileModal } from '@/components/EditProfileModal';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
@@ -25,6 +27,7 @@ export default function Profile() {
     totalPoints,
     isLoading: achievementsLoading 
   } = useAchievements(targetUserId);
+  const { records, totals, isLoading: historyLoading } = useUserHistory(targetUserId);
 
   if (authLoading) {
     return (
@@ -39,7 +42,7 @@ export default function Profile() {
     return <Navigate to="/auth" replace />;
   }
 
-  const isLoading = profileLoading || achievementsLoading;
+  const isLoading = profileLoading || achievementsLoading || historyLoading;
   const canEdit = isOwnProfile || isAdmin;
   const displayRole = isOwnProfile ? role : null;
 
@@ -76,6 +79,12 @@ export default function Profile() {
               achievements={achievements}
               userAchievements={userAchievements}
               unlockedIds={unlockedIds}
+            />
+
+            <UserHistoryCard
+              records={records}
+              totals={totals}
+              isLoading={historyLoading}
             />
           </div>
         )}
