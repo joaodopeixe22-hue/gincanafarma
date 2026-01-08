@@ -18,6 +18,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import { AvatarUpload } from './AvatarUpload';
+import { useAvatarUpload } from '@/hooks/useAvatarUpload';
+import { useAuth } from '@/hooks/useAuth';
 
 interface EditProfileModalProps {
   open: boolean;
@@ -32,21 +35,37 @@ export function EditProfileModal({
   profile,
   onSave 
 }: EditProfileModalProps) {
+  const { user } = useAuth();
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [teamId, setTeamId] = useState(profile?.team_id || '');
   const [bio, setBio] = useState(profile?.bio || '');
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const { uploadAvatar, isUploading } = useAvatarUpload();
 
   const handleSave = async () => {
     setIsLoading(true);
+    
+    let avatarUrl = profile?.avatar_url;
+    
+    // Upload avatar if there's a pending file
+    if (pendingFile && user?.id) {
+      const newUrl = await uploadAvatar(pendingFile, user.id, profile?.avatar_url);
+      if (newUrl) {
+        avatarUrl = newUrl;
+      }
+    }
+    
     const { error } = await onSave({
       full_name: fullName || null,
       team_id: (teamId as any) || null,
       bio: bio || null,
+      avatar_url: avatarUrl,
     });
     setIsLoading(false);
     
     if (!error) {
+      setPendingFile(null);
       onOpenChange(false);
     }
   };
@@ -59,6 +78,13 @@ export function EditProfileModal({
         </DialogHeader>
         
         <div className="space-y-4">
+          <AvatarUpload
+            currentUrl={profile?.avatar_url}
+            fullName={fullName || profile?.full_name}
+            isUploading={isUploading}
+            onFileSelect={setPendingFile}
+          />
+
           <div className="space-y-2">
             <Label htmlFor="fullName">Nome completo</Label>
             <Input
@@ -98,8 +124,8 @@ export function EditProfileModal({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={isLoading}>
-              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            <Button onClick={handleSave} disabled={isLoading || isUploading}>
+              {(isLoading || isUploading) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Salvar
             </Button>
           </div>
