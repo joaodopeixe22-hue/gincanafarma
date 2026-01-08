@@ -51,13 +51,25 @@ export function MemberGoalsEditor({
     value: string
   ) => {
     const numValue = parseInt(value) || 0;
-    setLocalGoals((prev) => ({
-      ...prev,
-      [periodType]: {
+    
+    setLocalGoals((prev) => {
+      const newGoals = { ...prev };
+      
+      newGoals[periodType] = {
         ...prev[periodType],
         [kpiType]: Math.max(0, numValue),
-      },
-    }));
+      };
+      
+      // Se alterou o diário, calcula automaticamente o semanal (x5 dias úteis)
+      if (periodType === 'daily') {
+        newGoals.weekly = {
+          ...prev.weekly,
+          [kpiType]: Math.max(0, numValue) * 5,
+        };
+      }
+      
+      return newGoals;
+    });
   };
 
   const handleSave = async () => {
@@ -108,9 +120,15 @@ export function MemberGoalsEditor({
             </TabsList>
             <TabsContent value="daily" className="mt-4">
               {renderKpiInputs('daily')}
+              <p className="text-xs text-muted-foreground mt-4">
+                ℹ️ A meta semanal será calculada automaticamente (diária × 5 dias úteis)
+              </p>
             </TabsContent>
             <TabsContent value="weekly" className="mt-4">
               {renderKpiInputs('weekly')}
+              <p className="text-xs text-muted-foreground mt-4">
+                Valores calculados automaticamente. Você pode ajustar manualmente se necessário.
+              </p>
             </TabsContent>
           </Tabs>
         )}
