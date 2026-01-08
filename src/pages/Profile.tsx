@@ -4,10 +4,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useUserHistory } from '@/hooks/useUserHistory';
+import { useUserLevel } from '@/hooks/useUserLevel';
 import { ProfileCard } from '@/components/ProfileCard';
 import { AchievementList } from '@/components/AchievementList';
 import { UserHistoryCard } from '@/components/UserHistoryCard';
 import { EditProfileModal } from '@/components/EditProfileModal';
+import { LevelCard } from '@/components/LevelCard';
+import { LevelUpModal } from '@/components/LevelUpModal';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
@@ -28,6 +31,15 @@ export default function Profile() {
     isLoading: achievementsLoading 
   } = useAchievements(targetUserId);
   const { records, totals, isLoading: historyLoading } = useUserHistory(targetUserId);
+  const {
+    currentLevel,
+    nextLevel,
+    progress,
+    pointsToNext,
+    hasLeveledUp,
+    previousLevel,
+    clearLevelUp,
+  } = useUserLevel(targetUserId, totalPoints);
 
   if (authLoading) {
     return (
@@ -73,6 +85,18 @@ export default function Profile() {
               achievementsCount={unlockedIds.size}
               canEdit={canEdit}
               onEdit={() => setEditOpen(true)}
+              currentLevel={currentLevel}
+              nextLevel={nextLevel}
+              progress={progress}
+              pointsToNext={pointsToNext}
+            />
+
+            <LevelCard
+              currentLevel={currentLevel}
+              nextLevel={nextLevel}
+              progress={progress}
+              pointsToNext={pointsToNext}
+              totalPoints={totalPoints}
             />
 
             <AchievementList
@@ -95,6 +119,13 @@ export default function Profile() {
         onOpenChange={setEditOpen}
         profile={profile}
         onSave={updateProfile}
+      />
+
+      <LevelUpModal
+        open={hasLeveledUp}
+        onClose={clearLevelUp}
+        previousLevel={previousLevel}
+        newLevel={currentLevel}
       />
     </div>
   );

@@ -3,12 +3,14 @@ import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Users, Trophy, TrendingUp, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useIndividualRanking, TeamContribution, IndividualRanking } from '@/hooks/useIndividualRanking';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import { LevelBadge } from '@/components/LevelBadge';
+import { getLevelByPoints } from '@/lib/levels';
 
 const teamConfig = {
   dna: { name: 'DNA', color: 'bg-blue-500', textColor: 'text-blue-500', borderColor: 'border-blue-500' },
@@ -28,6 +30,8 @@ function MemberCard({ member, rank }: { member: IndividualRanking; rank: number 
     .join('')
     .toUpperCase()
     .slice(0, 2) || 'U';
+
+  const memberLevel = getLevelByPoints(member.total);
 
   const getRankBadge = () => {
     if (rank === 1) return <Badge className="bg-yellow-500 text-white">🥇 1º</Badge>;
@@ -49,7 +53,10 @@ function MemberCard({ member, rank }: { member: IndividualRanking; rank: number 
         <AvatarFallback className="text-sm">{initials}</AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
-        <p className="font-medium truncate">{member.full_name}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-medium truncate">{member.full_name}</p>
+          <LevelBadge level={memberLevel} size="sm" />
+        </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>OFEX: {member.ofex}</span>
           <span>•</span>
