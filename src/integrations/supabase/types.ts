@@ -137,6 +137,39 @@ export type Database = {
         }
         Relationships: []
       }
+      member_goals: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          kpi_type: string
+          period_type: string
+          target_value: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          kpi_type: string
+          period_type: string
+          target_value?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          kpi_type?: string
+          period_type?: string
+          target_value?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
