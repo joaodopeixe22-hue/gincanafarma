@@ -30,6 +30,15 @@ export interface UserAchievement {
   achievement?: Achievement;
 }
 
+export interface UserLevel {
+  id: string;
+  user_id: string;
+  level_number: number;
+  level_name: string;
+  total_points: number;
+  updated_at: string;
+}
+
 export interface UserWithProfile {
   id: string;
   email: string;

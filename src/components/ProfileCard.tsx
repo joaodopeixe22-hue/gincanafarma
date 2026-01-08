@@ -3,8 +3,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Edit, User } from 'lucide-react';
+import { Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LevelBadge } from '@/components/LevelBadge';
+import { LevelProgressBar } from '@/components/LevelProgressBar';
+import { LevelConfig } from '@/lib/levels';
 
 const teamConfig = {
   dna: { name: 'DNA', color: 'bg-blue-500' },
@@ -19,6 +22,10 @@ interface ProfileCardProps {
   achievementsCount: number;
   canEdit: boolean;
   onEdit: () => void;
+  currentLevel?: LevelConfig;
+  nextLevel?: LevelConfig | null;
+  progress?: number;
+  pointsToNext?: number;
 }
 
 export function ProfileCard({ 
@@ -27,7 +34,11 @@ export function ProfileCard({
   totalPoints, 
   achievementsCount,
   canEdit, 
-  onEdit 
+  onEdit,
+  currentLevel,
+  nextLevel,
+  progress = 0,
+  pointsToNext = 0,
 }: ProfileCardProps) {
   const team = profile?.team_id ? teamConfig[profile.team_id] : null;
   const initials = profile?.full_name
@@ -91,6 +102,9 @@ export function ProfileCard({
                   Membro
                 </Badge>
               )}
+              {currentLevel && (
+                <LevelBadge level={currentLevel} size="md" showName />
+              )}
             </div>
           </div>
 
@@ -104,6 +118,19 @@ export function ProfileCard({
 
         {profile?.bio && (
           <p className="mt-4 text-muted-foreground">{profile.bio}</p>
+        )}
+
+        {currentLevel && (
+          <div className="mt-6">
+            <LevelProgressBar
+              currentLevel={currentLevel}
+              nextLevel={nextLevel || null}
+              progress={progress}
+              pointsToNext={pointsToNext}
+              totalPoints={totalPoints}
+              compact
+            />
+          </div>
         )}
 
         <div className="grid grid-cols-2 gap-4 mt-6">
