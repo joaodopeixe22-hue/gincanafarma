@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, LogOut, Shield, Users, Loader2, Settings, Crown, UserPlus } from 'lucide-react';
+import { User, LogOut, Shield, Users, Loader2, Settings, Crown, UserPlus, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 export function UserMenu() {
-  const { user, role, isRoot, isAdmin, isMember, isAuthenticated, isLoading, canManageUsers, signOut } = useAuth();
+  const { user, role, isRoot, isAdmin, isLider, isMember, isAuthenticated, isLoading, canManageUsers, canAccessLeaderPanel, signOut } = useAuth();
   const { toast } = useToast();
 
   const handleSignOut = async () => {
@@ -68,6 +68,14 @@ export function UserMenu() {
         </span>
       );
     }
+    if (role === 'lider') {
+      return (
+        <span className="flex items-center gap-1 text-xs font-medium text-emerald-500">
+          <Star className="w-3 h-3" />
+          Líder
+        </span>
+      );
+    }
     if (role === 'member') {
       return (
         <span className="flex items-center gap-1 text-xs font-medium text-primary">
@@ -109,6 +117,14 @@ export function UserMenu() {
             Meu Perfil
           </Link>
         </DropdownMenuItem>
+        {canAccessLeaderPanel && (
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link to="/lideranca">
+              <Star className="w-4 h-4 mr-2" />
+              Painel de Liderança
+            </Link>
+          </DropdownMenuItem>
+        )}
         {isAdmin && (
           <DropdownMenuItem asChild className="cursor-pointer">
             <Link to="/admin">

@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Loader2, Crown, Shield, Users } from 'lucide-react';
+import { Eye, Loader2, Crown, Shield, Users, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -31,7 +31,7 @@ const teamConfig = {
 
 interface AdminUserTableProps {
   users: UserWithProfile[];
-  onUpdateRole: (userId: string, role: 'admin' | 'member') => Promise<{ error: any }>;
+  onUpdateRole: (userId: string, role: 'admin' | 'lider' | 'member') => Promise<{ error: any }>;
   onUpdateProfile: (userId: string, data: { team_id?: string }) => Promise<{ error: any }>;
   isRoot?: boolean;
 }
@@ -40,10 +40,16 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, isRoot = 
   const { toast } = useToast();
   const [loadingUser, setLoadingUser] = useState<string | null>(null);
 
-  const handleRoleChange = async (userId: string, role: 'admin' | 'member') => {
+  const handleRoleChange = async (userId: string, role: 'admin' | 'lider' | 'member') => {
     setLoadingUser(userId);
     const { error } = await onUpdateRole(userId, role);
     setLoadingUser(null);
+
+    const roleLabels: Record<string, string> = {
+      admin: 'Admin',
+      lider: 'Líder',
+      member: 'Membro',
+    };
 
     if (error) {
       toast({
@@ -54,7 +60,7 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, isRoot = 
     } else {
       toast({
         title: 'Papel atualizado',
-        description: `Usuário agora é ${role === 'admin' ? 'Admin' : 'Membro'}`,
+        description: `Usuário agora é ${roleLabels[role]}`,
       });
     }
   };
@@ -91,6 +97,14 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, isRoot = 
         <Badge variant="outline" className="border-amber-500 text-amber-500 gap-1">
           <Shield className="w-3 h-3" />
           Admin
+        </Badge>
+      );
+    }
+    if (role === 'lider') {
+      return (
+        <Badge variant="outline" className="border-emerald-500 text-emerald-500 gap-1">
+          <Star className="w-3 h-3" />
+          Líder
         </Badge>
       );
     }
@@ -169,7 +183,7 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, isRoot = 
                   ) : canEditRole ? (
                     <Select
                       value={user.role || 'member'}
-                      onValueChange={(value) => handleRoleChange(user.id, value as 'admin' | 'member')}
+                      onValueChange={(value) => handleRoleChange(user.id, value as 'admin' | 'lider' | 'member')}
                       disabled={loadingUser === user.id}
                     >
                       <SelectTrigger className="w-[120px]">
@@ -177,6 +191,7 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, isRoot = 
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="member">Membro</SelectItem>
+                        <SelectItem value="lider">Líder</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>

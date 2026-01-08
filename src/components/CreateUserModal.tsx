@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { z } from 'zod';
-import { UserPlus, IdCard, Lock, User, Users, Loader2 } from 'lucide-react';
+import { UserPlus, IdCard, Lock, User, Users, Loader2, Star, Shield } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ const createUserSchema = z.object({
   password: z.string().min(6, { message: 'Senha deve ter no mínimo 6 caracteres' }),
   full_name: z.string().min(2, { message: 'Nome deve ter no mínimo 2 caracteres' }),
   team_id: z.enum(['dna', 'elite', 'alcateia']).optional(),
-  role: z.enum(['member', 'admin']),
+  role: z.enum(['member', 'lider', 'admin']),
 });
 
 interface CreateUserModalProps {
@@ -41,7 +41,7 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
     password: '',
     full_name: '',
     team_id: '' as string,
-    role: 'member' as 'member' | 'admin',
+    role: 'member' as 'member' | 'lider' | 'admin',
   });
 
   const resetForm = () => {
@@ -197,7 +197,7 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
               <Label>Papel</Label>
               <Select
                 value={formData.role}
-                onValueChange={(value: 'member' | 'admin') => setFormData(prev => ({ ...prev, role: value }))}
+                onValueChange={(value: 'member' | 'lider' | 'admin') => setFormData(prev => ({ ...prev, role: value }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -209,9 +209,15 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
                       Membro
                     </div>
                   </SelectItem>
+                  <SelectItem value="lider">
+                    <div className="flex items-center gap-2">
+                      <Star className="w-4 h-4 text-emerald-500" />
+                      Líder
+                    </div>
+                  </SelectItem>
                   <SelectItem value="admin">
                     <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-amber-500" />
+                      <Shield className="w-4 h-4 text-amber-500" />
                       Admin
                     </div>
                   </SelectItem>
