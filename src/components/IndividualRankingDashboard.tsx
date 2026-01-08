@@ -55,7 +55,7 @@ function MemberCard({ member, rank }: { member: IndividualRanking; rank: number 
           <span>•</span>
           <span>Apoio: {member.apoio}</span>
           <span>•</span>
-          <span>Soria: {member.soria}</span>
+          <span>Sorria: {member.soria}</span>
           <span>•</span>
           <span>Cadastro: {member.cadastro}</span>
         </div>

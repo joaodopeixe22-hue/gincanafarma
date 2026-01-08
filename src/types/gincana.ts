@@ -33,6 +33,6 @@ export type KPIName = typeof KPIS[number];
 export const KPI_LABELS: Record<KPIName, string> = {
   ofex: 'OFEX',
   apoio: 'Apoio',
-  soria: 'Soria',
+  soria: 'Sorria',
   cadastro: 'Cadastro',
 };

@@ -69,7 +69,7 @@ export function UserHistoryCard({ records, totals, isLoading }: UserHistoryCardP
               Apoio: {totals.apoio}
             </Badge>
             <Badge variant="secondary" className="text-sm">
-              Soria: {totals.soria}
+              Sorria: {totals.soria}
             </Badge>
             <Badge variant="secondary" className="text-sm">
               Cadastro: {totals.cadastro}
@@ -99,7 +99,7 @@ export function UserHistoryCard({ records, totals, isLoading }: UserHistoryCardP
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                     <span>OFEX: <span className="text-foreground font-medium">{record.ofex}</span></span>
                     <span>Apoio: <span className="text-foreground font-medium">{record.apoio}</span></span>
-                    <span>Soria: <span className="text-foreground font-medium">{record.soria}</span></span>
+                    <span>Sorria: <span className="text-foreground font-medium">{record.soria}</span></span>
                     <span>Cadastro: <span className="text-foreground font-medium">{record.cadastro}</span></span>
                     <span className="ml-auto font-medium text-primary">Total: {recordTotal}</span>
                   </div>
