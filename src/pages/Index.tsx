@@ -12,6 +12,7 @@ import { StatsOverview } from '@/components/StatsOverview';
 import { GoalsProgress } from '@/components/GoalsProgress';
 import { AchievementRankingPodium } from '@/components/AchievementRankingPodium';
 import { UserMenu } from '@/components/UserMenu';
+import { GuidedTour } from '@/components/tour/GuidedTour';
 import { useGincanaData } from '@/hooks/useGincanaData';
 import { useUserDailyData } from '@/hooks/useUserDailyData';
 import { useAuth } from '@/hooks/useAuth';
@@ -110,8 +111,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Tour Guiado */}
+      <GuidedTour />
+
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border/50">
+      <header className="tour-header sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border/50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -128,7 +132,9 @@ const Index = () => {
                 <Flame className="w-4 h-4" />
                 <span>Competição Ativa</span>
               </div>
-              <UserMenu />
+              <div className="tour-user-menu">
+                <UserMenu />
+              </div>
             </div>
           </div>
         </div>
@@ -139,42 +145,42 @@ const Index = () => {
           <TabsList className="grid grid-cols-6 w-full max-w-4xl mx-auto bg-muted/50 p-1 rounded-xl">
             <TabsTrigger 
               value="calendario" 
-              className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
+              className="tour-calendar flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
             >
               <Calendar className="w-4 h-4" />
               <span className="hidden sm:inline">Calendário</span>
             </TabsTrigger>
             <TabsTrigger 
               value="diario"
-              className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
+              className="tour-ranking-daily flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
             >
               <Target className="w-4 h-4" />
               <span className="hidden sm:inline">Diário</span>
             </TabsTrigger>
             <TabsTrigger 
               value="semanal"
-              className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
+              className="tour-ranking-weekly flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
             >
               <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Semanal</span>
             </TabsTrigger>
             <TabsTrigger 
               value="mensal"
-              className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
+              className="tour-ranking-monthly flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
             >
               <Trophy className="w-4 h-4" />
               <span className="hidden sm:inline">Mensal</span>
             </TabsTrigger>
             <TabsTrigger 
               value="individual"
-              className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
+              className="tour-individual flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
             >
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Individual</span>
             </TabsTrigger>
             <TabsTrigger 
               value="conquistas"
-              className="flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
+              className="tour-achievements flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
             >
               <Medal className="w-4 h-4" />
               <span className="hidden sm:inline">Conquistas</span>

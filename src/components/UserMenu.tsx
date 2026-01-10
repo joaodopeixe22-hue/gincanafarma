@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, LogOut, Shield, Users, Loader2, Settings, Crown, UserPlus, Star } from 'lucide-react';
+import { User, LogOut, Shield, Users, Loader2, Settings, Crown, UserPlus, Star, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,10 +11,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useTourState } from '@/hooks/useTourState';
 
 export function UserMenu() {
   const { user, role, isRoot, isAdmin, isLider, isMember, isAuthenticated, isLoading, canManageUsers, canAccessLeaderPanel, signOut } = useAuth();
   const { toast } = useToast();
+  const { resetTour } = useTourState(user?.id);
+
+  const handleResetTour = () => {
+    resetTour();
+    toast({
+      title: 'Tour reiniciado!',
+      description: 'O tour guiado será exibido novamente.',
+    });
+  };
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -111,14 +121,14 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild className="cursor-pointer">
+        <DropdownMenuItem asChild className="tour-profile-link cursor-pointer">
           <Link to="/profile">
             <User className="w-4 h-4 mr-2" />
             Meu Perfil
           </Link>
         </DropdownMenuItem>
         {canAccessLeaderPanel && (
-          <DropdownMenuItem asChild className="cursor-pointer">
+          <DropdownMenuItem asChild className="tour-leader-link cursor-pointer">
             <Link to="/lideranca">
               <Star className="w-4 h-4 mr-2" />
               Painel de Liderança
@@ -134,6 +144,10 @@ export function UserMenu() {
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleResetTour} className="cursor-pointer">
+          <HelpCircle className="w-4 h-4 mr-2" />
+          Ver Tour Novamente
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
           <LogOut className="w-4 h-4 mr-2" />
           Sair
