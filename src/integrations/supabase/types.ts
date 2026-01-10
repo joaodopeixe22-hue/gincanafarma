@@ -359,6 +359,7 @@ export type Database = {
           bio: string | null
           created_at: string | null
           full_name: string | null
+          has_completed_tour: boolean | null
           id: string
           matricula: string | null
           team_id: string | null
@@ -369,6 +370,7 @@ export type Database = {
           bio?: string | null
           created_at?: string | null
           full_name?: string | null
+          has_completed_tour?: boolean | null
           id: string
           matricula?: string | null
           team_id?: string | null
@@ -379,6 +381,7 @@ export type Database = {
           bio?: string | null
           created_at?: string | null
           full_name?: string | null
+          has_completed_tour?: boolean | null
           id?: string
           matricula?: string | null
           team_id?: string | null
