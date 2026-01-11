@@ -5,12 +5,14 @@ import { useProfile } from '@/hooks/useProfile';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useUserHistory } from '@/hooks/useUserHistory';
 import { useUserLevel } from '@/hooks/useUserLevel';
+import { useSuggestions } from '@/hooks/useSuggestions';
 import { ProfileCard } from '@/components/ProfileCard';
 import { AchievementList } from '@/components/AchievementList';
 import { UserHistoryCard } from '@/components/UserHistoryCard';
 import { EditProfileModal } from '@/components/EditProfileModal';
 import { LevelCard } from '@/components/LevelCard';
 import { LevelUpModal } from '@/components/LevelUpModal';
+import { MySuggestions } from '@/components/suggestions/MySuggestions';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
@@ -40,6 +42,11 @@ export default function Profile() {
     previousLevel,
     clearLevelUp,
   } = useUserLevel(targetUserId, totalPoints);
+  const { 
+    suggestions, 
+    isLoading: suggestionsLoading, 
+    createSuggestion 
+  } = useSuggestions(isOwnProfile ? targetUserId : undefined);
 
   if (authLoading) {
     return (
@@ -110,6 +117,14 @@ export default function Profile() {
               totals={totals}
               isLoading={historyLoading}
             />
+
+            {isOwnProfile && (
+              <MySuggestions
+                suggestions={suggestions}
+                isLoading={suggestionsLoading}
+                onCreateSuggestion={createSuggestion}
+              />
+            )}
           </div>
         )}
       </main>
