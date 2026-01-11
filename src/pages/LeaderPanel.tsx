@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Loader2, Award, Heart, Bell, BarChart3, BookOpen, Plus } from 'lucide-react';
+import { ArrowLeft, Users, Loader2, Award, Heart, Bell, BarChart3, BookOpen, Plus, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,6 +10,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useTeamReports } from '@/hooks/useTeamReports';
 import { useQuizzes } from '@/hooks/useQuizzes';
+import { useSuggestions } from '@/hooks/useSuggestions';
 import { TeamSummaryCard } from '@/components/TeamSummaryCard';
 import { TeamMemberCard } from '@/components/TeamMemberCard';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -20,6 +22,7 @@ import { PerformanceChart } from '@/components/leader/PerformanceChart';
 import { MemberPerformanceTable } from '@/components/leader/MemberPerformanceTable';
 import { CreateQuizModal } from '@/components/leader/CreateQuizModal';
 import { QuizList } from '@/components/leader/QuizList';
+import { SuggestionList } from '@/components/suggestions/SuggestionList';
 
 const teamConfig: Record<string, { name: string; color: string }> = {
   dna: { name: 'DNA', color: '#3b82f6' },
@@ -49,6 +52,7 @@ export default function LeaderPanel() {
   const { members, teamTotals, isLoading: membersLoading } = useTeamMembers(selectedTeam);
   const { dailyData, weeklyComparison, memberPerformance, isLoading: reportsLoading } = useTeamReports(selectedTeam);
   const { quizzes, isLoading: quizzesLoading, createQuiz, toggleQuizActive, deleteQuiz } = useQuizzes(user?.id);
+  const { suggestions, isLoading: suggestionsLoading, pendingCount, respondToSuggestion } = useSuggestions(user?.id, true);
 
   if (authLoading || profileLoading) {
     return (
@@ -115,11 +119,19 @@ export default function LeaderPanel() {
           </div>
         ) : (
           <Tabs defaultValue="team" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="team"><Users className="w-4 h-4 mr-1" />Equipe</TabsTrigger>
               <TabsTrigger value="actions"><Award className="w-4 h-4 mr-1" />Ações</TabsTrigger>
               <TabsTrigger value="reports"><BarChart3 className="w-4 h-4 mr-1" />Relatórios</TabsTrigger>
               <TabsTrigger value="quizzes"><BookOpen className="w-4 h-4 mr-1" />Quizzes</TabsTrigger>
+              <TabsTrigger value="suggestions" className="relative">
+                <Lightbulb className="w-4 h-4 mr-1" />Sugestões
+                {pendingCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                    {pendingCount}
+                  </Badge>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="notifications"><Bell className="w-4 h-4 mr-1" />Notificar</TabsTrigger>
             </TabsList>
 
@@ -178,6 +190,15 @@ export default function LeaderPanel() {
               ) : (
                 <QuizList quizzes={quizzes} onToggleActive={toggleQuizActive} onDelete={deleteQuiz} />
               )}
+            </TabsContent>
+
+            <TabsContent value="suggestions">
+              <SuggestionList
+                suggestions={suggestions}
+                isLoading={suggestionsLoading}
+                pendingCount={pendingCount}
+                onRespond={respondToSuggestion}
+              />
             </TabsContent>
 
             <TabsContent value="notifications" className="space-y-4">

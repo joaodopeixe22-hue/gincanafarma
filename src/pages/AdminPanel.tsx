@@ -3,18 +3,22 @@ import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { useAchievements } from '@/hooks/useAchievements';
+import { useSuggestions } from '@/hooks/useSuggestions';
 import { AdminUserTable } from '@/components/AdminUserTable';
 import { GrantAchievementModal } from '@/components/GrantAchievementModal';
 import { CreateUserModal } from '@/components/CreateUserModal';
+import { SuggestionList } from '@/components/suggestions/SuggestionList';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Loader2, Users, Trophy, Award, UserPlus, Crown } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Loader2, Users, Trophy, Award, UserPlus, Crown, Lightbulb } from 'lucide-react';
 
 export default function AdminPanel() {
-  const { isAdmin, isRoot, isLoading: authLoading, canManageUsers } = useAuth();
+  const { isAdmin, isRoot, isLoading: authLoading, canManageUsers, user } = useAuth();
   const { users, isLoading: usersLoading, updateUserRole, updateUserProfile, refetch } = useAdminUsers();
   const { achievements, grantAchievement } = useAchievements();
+  const { suggestions, isLoading: suggestionsLoading, pendingCount, respondToSuggestion } = useSuggestions(user?.id, true);
   const [grantModalOpen, setGrantModalOpen] = useState(false);
   const [createUserModalOpen, setCreateUserModalOpen] = useState(false);
 
@@ -63,6 +67,15 @@ export default function AdminPanel() {
             <TabsTrigger value="achievements" className="gap-2">
               <Trophy className="w-4 h-4" />
               Conquistas
+            </TabsTrigger>
+            <TabsTrigger value="suggestions" className="gap-2 relative">
+              <Lightbulb className="w-4 h-4" />
+              Sugestões
+              {pendingCount > 0 && (
+                <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                  {pendingCount}
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -154,6 +167,15 @@ export default function AdminPanel() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="suggestions">
+            <SuggestionList
+              suggestions={suggestions}
+              isLoading={suggestionsLoading}
+              pendingCount={pendingCount}
+              onRespond={respondToSuggestion}
+            />
           </TabsContent>
         </Tabs>
       </main>

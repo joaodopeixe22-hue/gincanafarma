@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { User, LogOut, Shield, Users, Loader2, Settings, Crown, UserPlus, Star, HelpCircle } from 'lucide-react';
+import { User, LogOut, Shield, Users, Loader2, Settings, Crown, UserPlus, Star, HelpCircle, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,12 +13,14 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useTourState } from '@/hooks/useTourState';
-
+import { useSuggestions } from '@/hooks/useSuggestions';
+import { SuggestionForm } from '@/components/suggestions/SuggestionForm';
 export function UserMenu() {
   const { user, role, isRoot, isAdmin, isLider, isMember, isAuthenticated, isLoading, canManageUsers, canAccessLeaderPanel, signOut } = useAuth();
   const { toast } = useToast();
   const { resetTour } = useTourState(user?.id);
-
+  const { createSuggestion } = useSuggestions(user?.id);
+  const [suggestionFormOpen, setSuggestionFormOpen] = useState(false);
   const handleResetTour = () => {
     resetTour();
     toast({
@@ -144,6 +147,10 @@ export function UserMenu() {
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => setSuggestionFormOpen(true)} className="cursor-pointer">
+          <Lightbulb className="w-4 h-4 mr-2" />
+          Enviar Sugestão
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={handleResetTour} className="cursor-pointer">
           <HelpCircle className="w-4 h-4 mr-2" />
           Ver Tour Novamente
@@ -153,6 +160,12 @@ export function UserMenu() {
           Sair
         </DropdownMenuItem>
       </DropdownMenuContent>
+
+      <SuggestionForm
+        open={suggestionFormOpen}
+        onOpenChange={setSuggestionFormOpen}
+        onSubmit={createSuggestion}
+      />
     </DropdownMenu>
   );
 }
