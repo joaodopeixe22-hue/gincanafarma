@@ -32,7 +32,7 @@ const Index = () => {
   } = useGincanaData();
 
   const { isAdmin, isRoot, isMember, isAuthenticated, role } = useAuth();
-  const { getDataForDate, hasDataForDate, saveData } = useUserDailyData();
+  const { getDataForDate, hasDataForDate, isDateLocked, saveData } = useUserDailyData();
   const { toast } = useToast();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -207,7 +207,8 @@ const Index = () => {
                 <GincanaCalendar
                   selectedDate={selectedDate}
                   onSelectDate={setSelectedDate}
-                  hasDataForDay={hasDataForDay}
+                  hasDataForDay={isMemberOnly ? hasDataForDate : hasDataForDay}
+                  isDateLocked={isMemberOnly ? isDateLocked : undefined}
                   canEdit={canEditTeamData}
                   canAdd={isMember}
                   onDayClick={handleDayClick}
@@ -306,6 +307,7 @@ const Index = () => {
         initialData={individualData}
         onSave={handleSaveIndividualData}
         hasExistingData={hasIndividualData}
+        isLocked={isDateLocked(modalDate)}
       />
     </div>
   );
