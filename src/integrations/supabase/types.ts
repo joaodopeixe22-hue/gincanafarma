@@ -681,6 +681,7 @@ export type Database = {
           created_at: string | null
           date: string
           id: string
+          is_locked: boolean | null
           ofex: number
           soria: number
           updated_at: string | null
@@ -692,6 +693,7 @@ export type Database = {
           created_at?: string | null
           date: string
           id?: string
+          is_locked?: boolean | null
           ofex?: number
           soria?: number
           updated_at?: string | null
@@ -703,6 +705,7 @@ export type Database = {
           created_at?: string | null
           date?: string
           id?: string
+          is_locked?: boolean | null
           ofex?: number
           soria?: number
           updated_at?: string | null

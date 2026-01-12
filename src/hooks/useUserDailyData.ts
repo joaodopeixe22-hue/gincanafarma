@@ -11,6 +11,7 @@ export interface UserDailyData {
   apoio: number;
   soria: number;
   cadastro: number;
+  is_locked?: boolean;
 }
 
 interface UserDailyDataRow {
@@ -21,6 +22,7 @@ interface UserDailyDataRow {
   apoio: number;
   soria: number;
   cadastro: number;
+  is_locked: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -55,6 +57,7 @@ export function useUserDailyData() {
         apoio: row.apoio,
         soria: row.soria,
         cadastro: row.cadastro,
+        is_locked: row.is_locked,
       })));
     }
     setIsLoading(false);
@@ -74,10 +77,26 @@ export function useUserDailyData() {
     return data.some(d => d.date === dateStr);
   }, [data]);
 
+  const isDateLocked = useCallback((date: Date): boolean => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const record = data.find(d => d.date === dateStr);
+    return record?.is_locked === true;
+  }, [data]);
+
   const saveData = useCallback(async (date: Date, values: { ofex: number; apoio: number; soria: number; cadastro: number }) => {
     if (!user?.id) throw new Error('User not authenticated');
 
     const dateStr = format(date, 'yyyy-MM-dd');
+    const today = format(new Date(), 'yyyy-MM-dd');
+    
+    // Check if record is locked
+    const existingRecord = data.find(d => d.date === dateStr);
+    if (existingRecord?.is_locked) {
+      throw new Error('Este dia está bloqueado para edição');
+    }
+    
+    // If saving data for a past day, mark as locked
+    const shouldLock = dateStr < today;
     
     const { error } = await supabase
       .from('user_daily_data')
@@ -88,6 +107,7 @@ export function useUserDailyData() {
         apoio: values.apoio,
         soria: values.soria,
         cadastro: values.cadastro,
+        is_locked: shouldLock,
       }, { onConflict: 'user_id,date' });
 
     if (error) {
@@ -99,13 +119,14 @@ export function useUserDailyData() {
     
     // Trigger achievement check
     supabase.functions.invoke('check-achievements').catch(console.error);
-  }, [user?.id, fetchUserData]);
+  }, [user?.id, fetchUserData, data]);
 
   return {
     data,
     isLoading,
     getDataForDate,
     hasDataForDate,
+    isDateLocked,
     saveData,
     refetch: fetchUserData,
   };

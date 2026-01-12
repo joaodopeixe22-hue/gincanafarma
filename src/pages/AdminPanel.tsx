@@ -8,11 +8,12 @@ import { AdminUserTable } from '@/components/AdminUserTable';
 import { GrantAchievementModal } from '@/components/GrantAchievementModal';
 import { CreateUserModal } from '@/components/CreateUserModal';
 import { SuggestionList } from '@/components/suggestions/SuggestionList';
+import { WeeklyReportViewer } from '@/components/admin/WeeklyReportViewer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Loader2, Users, Trophy, Award, UserPlus, Crown, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Loader2, Users, Trophy, Award, UserPlus, Crown, Lightbulb, BarChart3 } from 'lucide-react';
 
 export default function AdminPanel() {
   const { isAdmin, isRoot, isLoading: authLoading, canManageUsers, user } = useAuth();
@@ -76,6 +77,10 @@ export default function AdminPanel() {
                   {pendingCount}
                 </Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Relatórios
             </TabsTrigger>
           </TabsList>
 
@@ -176,6 +181,10 @@ export default function AdminPanel() {
               pendingCount={pendingCount}
               onRespond={respondToSuggestion}
             />
+          </TabsContent>
+
+          <TabsContent value="reports">
+            <WeeklyReportViewer />
           </TabsContent>
         </Tabs>
       </main>

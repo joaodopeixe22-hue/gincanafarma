@@ -9,12 +9,13 @@ interface GincanaCalendarProps {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
   hasDataForDay: (date: Date) => boolean;
+  isDateLocked?: (date: Date) => boolean;
   onDayClick: (date: Date) => void;
   canEdit?: boolean;
   canAdd?: boolean;
 }
 
-export function GincanaCalendar({ selectedDate, onSelectDate, hasDataForDay, onDayClick, canEdit = false, canAdd = false }: GincanaCalendarProps) {
+export function GincanaCalendar({ selectedDate, onSelectDate, hasDataForDay, isDateLocked, onDayClick, canEdit = false, canAdd = false }: GincanaCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
   const monthStart = startOfMonth(currentMonth);
@@ -71,11 +72,15 @@ export function GincanaCalendar({ selectedDate, onSelectDate, hasDataForDay, onD
         ))}
         {days.map(day => {
           const hasData = hasDataForDay(day);
+          const isLocked = isDateLocked?.(day) ?? false;
           const isSelected = isSameDay(day, selectedDate);
           const isCurrentDay = isToday(day);
+          const isFutureDay = day > new Date();
           
-          // Determinar se o dia é clicável
-          const isClickable = canEdit || (canAdd && !hasData);
+          // Determinar se o dia é clicável:
+          // - canEdit (admin) pode sempre clicar
+          // - canAdd (member) pode clicar em dias passados/hoje que não estão bloqueados
+          const isClickable = !isFutureDay && (canEdit || (canAdd && (!hasData || !isLocked)));
           
           return (
             <button
@@ -86,16 +91,24 @@ export function GincanaCalendar({ selectedDate, onSelectDate, hasDataForDay, onD
                 'aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all duration-200',
                 isClickable && 'hover:scale-105 hover:shadow-lg cursor-pointer',
                 !isClickable && 'cursor-default',
+                isFutureDay && 'opacity-40',
                 isSelected && 'bg-primary text-primary-foreground shadow-glow-primary',
                 !isSelected && isCurrentDay && 'bg-accent text-accent-foreground ring-2 ring-primary/50',
                 !isSelected && !isCurrentDay && 'bg-muted/30',
                 !isSelected && !isCurrentDay && isClickable && 'hover:bg-muted/50',
-                hasData && !isSelected && 'ring-2 ring-success/50'
+                hasData && !isSelected && !isLocked && 'ring-2 ring-success/50',
+                hasData && isLocked && !isSelected && 'ring-2 ring-amber-500/50'
               )}
             >
               <span className="text-sm font-semibold">{format(day, 'd')}</span>
               {hasData && (
-                <div className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-success" />
+                <div className={cn(
+                  "absolute bottom-1 w-1.5 h-1.5 rounded-full",
+                  isLocked ? "bg-amber-500" : "bg-success"
+                )} />
+              )}
+              {isLocked && hasData && (
+                <div className="absolute top-1 right-1 text-[8px]">🔒</div>
               )}
             </button>
           );
