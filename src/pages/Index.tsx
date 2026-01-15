@@ -3,6 +3,7 @@ import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Trophy, Calendar, TrendingUp, Target, Flame, Medal, Users } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { GincanaCalendar } from '@/components/GincanaCalendar';
 import { DataInputModal } from '@/components/DataInputModal';
 import { IndividualDataInputModal } from '@/components/IndividualDataInputModal';
@@ -13,11 +14,14 @@ import { GoalsProgress } from '@/components/GoalsProgress';
 import { AchievementRankingPodium } from '@/components/AchievementRankingPodium';
 import { UserMenu } from '@/components/UserMenu';
 import { GuidedTour } from '@/components/tour/GuidedTour';
+import { ViewModeToggle } from '@/components/ViewModeToggle';
 import { useGincanaData } from '@/hooks/useGincanaData';
 import { useUserDailyData } from '@/hooks/useUserDailyData';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useViewMode } from '@/contexts/ViewModeContext';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 const Index = () => {
   const {
@@ -34,6 +38,7 @@ const Index = () => {
   const { isAdmin, isRoot, isMember, isAuthenticated, role } = useAuth();
   const { getDataForDate, hasDataForDate, isDateLocked, saveData } = useUserDailyData();
   const { toast } = useToast();
+  const { isMobile } = useViewMode();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isIndividualModalOpen, setIsIndividualModalOpen] = useState(false);
@@ -116,22 +121,29 @@ const Index = () => {
 
       {/* Header */}
       <header className="tour-header sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border/50">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-warning to-amber-600 shadow-glow-warning">
-                <Trophy className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className={cn(
+                "p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-warning to-amber-600 shadow-glow-warning"
+              )}>
+                <Trophy className={cn("text-white", isMobile ? "w-5 h-5" : "w-6 h-6")} />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">Circuito Farma</h1>
-                <p className="text-xs text-muted-foreground">Gincana 2025</p>
+                <h1 className={cn("font-bold text-foreground", isMobile ? "text-lg" : "text-xl")}>
+                  Gincana Farma
+                </h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">Circuito 2025</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                <Flame className="w-4 h-4" />
-                <span>Competição Ativa</span>
-              </div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              {!isMobile && (
+                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                  <Flame className="w-4 h-4" />
+                  <span>Competição Ativa</span>
+                </div>
+              )}
+              {!isMobile && <ViewModeToggle />}
               <div className="tour-user-menu">
                 <UserMenu />
               </div>
@@ -140,52 +152,102 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
-        <Tabs defaultValue="calendario" className="space-y-6">
-          <TabsList className="grid grid-cols-6 w-full max-w-4xl mx-auto bg-muted/50 p-1 rounded-xl">
-            <TabsTrigger 
-              value="calendario" 
-              className="tour-calendar flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
-            >
-              <Calendar className="w-4 h-4" />
-              <span className="hidden sm:inline">Calendário</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="diario"
-              className="tour-ranking-daily flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
-            >
-              <Target className="w-4 h-4" />
-              <span className="hidden sm:inline">Diário</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="semanal"
-              className="tour-ranking-weekly flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
-            >
-              <TrendingUp className="w-4 h-4" />
-              <span className="hidden sm:inline">Semanal</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="mensal"
-              className="tour-ranking-monthly flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
-            >
-              <Trophy className="w-4 h-4" />
-              <span className="hidden sm:inline">Mensal</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="individual"
-              className="tour-individual flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
-            >
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Individual</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="conquistas"
-              className="tour-achievements flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
-            >
-              <Medal className="w-4 h-4" />
-              <span className="hidden sm:inline">Conquistas</span>
-            </TabsTrigger>
-          </TabsList>
+      <main className={cn("container mx-auto px-3 sm:px-4", isMobile ? "py-4" : "py-6")}>
+        <Tabs defaultValue="calendario" className="space-y-4 sm:space-y-6">
+          {isMobile ? (
+            <ScrollArea className="w-full">
+              <TabsList className="inline-flex h-auto gap-1.5 p-1.5 bg-muted/50 rounded-xl w-max min-w-full">
+                <TabsTrigger 
+                  value="calendario" 
+                  className="tour-calendar flex items-center gap-1.5 px-3 py-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg text-xs"
+                >
+                  <Calendar className="w-4 h-4" />
+                  Calendário
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="diario"
+                  className="tour-ranking-daily flex items-center gap-1.5 px-3 py-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg text-xs"
+                >
+                  <Target className="w-4 h-4" />
+                  Diário
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="semanal"
+                  className="tour-ranking-weekly flex items-center gap-1.5 px-3 py-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg text-xs"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  Semanal
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="mensal"
+                  className="tour-ranking-monthly flex items-center gap-1.5 px-3 py-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg text-xs"
+                >
+                  <Trophy className="w-4 h-4" />
+                  Mensal
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="individual"
+                  className="tour-individual flex items-center gap-1.5 px-3 py-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg text-xs"
+                >
+                  <Users className="w-4 h-4" />
+                  Individual
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="conquistas"
+                  className="tour-achievements flex items-center gap-1.5 px-3 py-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg text-xs"
+                >
+                  <Medal className="w-4 h-4" />
+                  Conquistas
+                </TabsTrigger>
+              </TabsList>
+              <ScrollBar orientation="horizontal" className="invisible" />
+            </ScrollArea>
+          ) : (
+            <TabsList className="grid grid-cols-6 w-full max-w-4xl mx-auto bg-muted/50 p-1 rounded-xl">
+              <TabsTrigger 
+                value="calendario" 
+                className="tour-calendar flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
+              >
+                <Calendar className="w-4 h-4" />
+                <span className="hidden sm:inline">Calendário</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="diario"
+                className="tour-ranking-daily flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
+              >
+                <Target className="w-4 h-4" />
+                <span className="hidden sm:inline">Diário</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="semanal"
+                className="tour-ranking-weekly flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
+              >
+                <TrendingUp className="w-4 h-4" />
+                <span className="hidden sm:inline">Semanal</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="mensal"
+                className="tour-ranking-monthly flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
+              >
+                <Trophy className="w-4 h-4" />
+                <span className="hidden sm:inline">Mensal</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="individual"
+                className="tour-individual flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
+              >
+                <Users className="w-4 h-4" />
+                <span className="hidden sm:inline">Individual</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="conquistas"
+                className="tour-achievements flex items-center gap-2 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg"
+              >
+                <Medal className="w-4 h-4" />
+                <span className="hidden sm:inline">Conquistas</span>
+              </TabsTrigger>
+            </TabsList>
+          )}
 
           <TabsContent value="calendario" className="space-y-6">
             <motion.div
