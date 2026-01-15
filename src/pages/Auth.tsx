@@ -87,8 +87,8 @@ export default function Auth() {
             <Trophy className="w-8 h-8 text-white" />
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground">DNA de Campeões</h1>
-            <p className="text-sm text-muted-foreground">Gincana Farma 2025</p>
+            <h1 className="text-2xl font-bold text-foreground">Gincana Farma</h1>
+            <p className="text-sm text-muted-foreground">Circuito Farma 2025</p>
           </div>
         </div>
 

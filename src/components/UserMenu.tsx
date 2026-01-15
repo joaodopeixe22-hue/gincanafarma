@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { User, LogOut, Shield, Users, Loader2, Settings, Crown, UserPlus, Star, HelpCircle, Lightbulb } from 'lucide-react';
+import { User, LogOut, Shield, Users, Loader2, Settings, Crown, Star, HelpCircle, Lightbulb, Monitor, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -9,18 +9,26 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useTourState } from '@/hooks/useTourState';
 import { useSuggestions } from '@/hooks/useSuggestions';
 import { SuggestionForm } from '@/components/suggestions/SuggestionForm';
+import { useViewMode, ViewMode } from '@/contexts/ViewModeContext';
+
 export function UserMenu() {
   const { user, role, isRoot, isAdmin, isLider, isMember, isAuthenticated, isLoading, canManageUsers, canAccessLeaderPanel, signOut } = useAuth();
   const { toast } = useToast();
   const { resetTour } = useTourState(user?.id);
   const { createSuggestion } = useSuggestions(user?.id);
   const [suggestionFormOpen, setSuggestionFormOpen] = useState(false);
+  const { mode, setViewMode } = useViewMode();
   const handleResetTour = () => {
     resetTour();
     toast({
@@ -147,6 +155,25 @@ export function UserMenu() {
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger className="cursor-pointer">
+            {mode === 'mobile' ? <Smartphone className="w-4 h-4 mr-2" /> : <Monitor className="w-4 h-4 mr-2" />}
+            Modo de Visualização
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuRadioGroup value={mode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+              <DropdownMenuRadioItem value="auto">Automático</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="desktop">
+                <Monitor className="w-4 h-4 mr-2" />
+                Desktop
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="mobile">
+                <Smartphone className="w-4 h-4 mr-2" />
+                Mobile
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuItem onClick={() => setSuggestionFormOpen(true)} className="cursor-pointer">
           <Lightbulb className="w-4 h-4 mr-2" />
           Enviar Sugestão
