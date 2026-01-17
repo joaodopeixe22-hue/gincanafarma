@@ -46,8 +46,9 @@ const Index = () => {
 
   // Root e Admin podem editar dados da equipe
   const canEditTeamData = isRoot || isAdmin;
-  // Apenas membros (não admins/root) usam o modal individual
-  const isMemberOnly = role === 'member';
+  // Membros e líderes usam o modal individual
+  // Apenas admin/root usam o modal de equipe
+  const usesIndividualModal = role === 'member' || role === 'lider';
 
   const handleDayClick = (date: Date) => {
     // Visitantes não podem abrir o modal
@@ -73,8 +74,8 @@ const Index = () => {
     setModalDate(date);
     setSelectedDate(date);
 
-    // Membros (não admin/root) usam modal individual
-    if (isMemberOnly) {
+    // Membros e líderes usam modal individual
+    if (usesIndividualModal) {
       setIsIndividualModalOpen(true);
     } else {
       // Admin/Root usam modal de equipe
@@ -257,9 +258,9 @@ const Index = () => {
             >
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-foreground">Painel da Gincana</h2>
-                <p className="text-muted-foreground">
+              <p className="text-muted-foreground">
                   {isMember 
-                    ? isMemberOnly 
+                    ? usesIndividualModal 
                       ? 'Clique em um dia para registrar seus KPIs individuais'
                       : 'Clique em um dia para inserir ou editar os dados da equipe'
                     : 'Faça login para adicionar dados'}
@@ -269,8 +270,8 @@ const Index = () => {
                 <GincanaCalendar
                   selectedDate={selectedDate}
                   onSelectDate={setSelectedDate}
-                  hasDataForDay={isMemberOnly ? hasDataForDate : hasDataForDay}
-                  isDateLocked={isMemberOnly ? isDateLocked : undefined}
+                  hasDataForDay={usesIndividualModal ? hasDataForDate : hasDataForDay}
+                  isDateLocked={usesIndividualModal ? isDateLocked : undefined}
                   canEdit={canEditTeamData}
                   canAdd={isMember}
                   onDayClick={handleDayClick}
