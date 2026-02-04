@@ -17,11 +17,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Loader2, Crown, Shield, Users, Star } from 'lucide-react';
+import { Eye, Loader2, Crown, Shield, Users, Star, MoreVertical, Unlock, Trash2, Settings2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { AdminActionsModal } from './AdminActionsModal';
 
 const teamConfig = {
   dna: { name: 'DNA', color: 'bg-blue-500' },
@@ -33,13 +40,14 @@ interface AdminUserTableProps {
   users: UserWithProfile[];
   onUpdateRole: (userId: string, role: 'admin' | 'lider' | 'member') => Promise<{ error: any }>;
   onUpdateProfile: (userId: string, data: { team_id?: string }) => Promise<{ error: any }>;
+  onDataChanged: () => void;
   isRoot?: boolean;
 }
 
-export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, isRoot = false }: AdminUserTableProps) {
+export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, onDataChanged, isRoot = false }: AdminUserTableProps) {
   const { toast } = useToast();
   const [loadingUser, setLoadingUser] = useState<string | null>(null);
-
+  const [actionsModalUser, setActionsModalUser] = useState<{ id: string; name: string } | null>(null);
   const handleRoleChange = async (userId: string, role: 'admin' | 'lider' | 'member') => {
     setLoadingUser(userId);
     const { error } = await onUpdateRole(userId, role);
@@ -200,21 +208,53 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, isRoot = 
                   )}
                 </TableCell>
                 <TableCell>
-                  {loadingUser === user.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Button asChild variant="ghost" size="icon">
-                      <Link to={`/profile/${user.id}`}>
-                        <Eye className="w-4 h-4" />
-                      </Link>
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {loadingUser === user.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Button asChild variant="ghost" size="icon">
+                          <Link to={`/profile/${user.id}`}>
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={() => setActionsModalUser({ 
+                                id: user.id, 
+                                name: user.profile?.full_name || 'Usuário' 
+                              })}
+                            >
+                              <Settings2 className="w-4 h-4 mr-2" />
+                              Gerenciar Dados
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             );
           })}
         </TableBody>
       </Table>
+
+      {actionsModalUser && (
+        <AdminActionsModal
+          open={!!actionsModalUser}
+          onOpenChange={(open) => !open && setActionsModalUser(null)}
+          userId={actionsModalUser.id}
+          userName={actionsModalUser.name}
+          onDataChanged={onDataChanged}
+        />
+      )}
     </div>
   );
 }

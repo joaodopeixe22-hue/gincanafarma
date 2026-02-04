@@ -7,13 +7,14 @@ import { useSuggestions } from '@/hooks/useSuggestions';
 import { AdminUserTable } from '@/components/AdminUserTable';
 import { GrantAchievementModal } from '@/components/GrantAchievementModal';
 import { CreateUserModal } from '@/components/CreateUserModal';
+import { ResetTeamDataModal } from '@/components/ResetTeamDataModal';
 import { SuggestionList } from '@/components/suggestions/SuggestionList';
 import { WeeklyReportViewer } from '@/components/admin/WeeklyReportViewer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Loader2, Users, Trophy, Award, UserPlus, Crown, Lightbulb, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Loader2, Users, Trophy, Award, UserPlus, Crown, Lightbulb, BarChart3, RotateCcw } from 'lucide-react';
 
 export default function AdminPanel() {
   const { isAdmin, isRoot, isLoading: authLoading, canManageUsers, user } = useAuth();
@@ -22,7 +23,7 @@ export default function AdminPanel() {
   const { suggestions, isLoading: suggestionsLoading, pendingCount, respondToSuggestion } = useSuggestions(user?.id, true);
   const [grantModalOpen, setGrantModalOpen] = useState(false);
   const [createUserModalOpen, setCreateUserModalOpen] = useState(false);
-
+  const [resetTeamModalOpen, setResetTeamModalOpen] = useState(false);
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -87,7 +88,7 @@ export default function AdminPanel() {
           <TabsContent value="users">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Users className="w-5 h-5" />
@@ -97,12 +98,18 @@ export default function AdminPanel() {
                       Gerencie os usuários, suas equipes e papéis
                     </CardDescription>
                   </div>
-                  {canManageUsers && (
-                    <Button onClick={() => setCreateUserModalOpen(true)} className="gap-2">
-                      <UserPlus className="w-4 h-4" />
-                      Criar Usuário
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setResetTeamModalOpen(true)} className="gap-2">
+                      <RotateCcw className="w-4 h-4" />
+                      Zerar Pontuação
                     </Button>
-                  )}
+                    {canManageUsers && (
+                      <Button onClick={() => setCreateUserModalOpen(true)} className="gap-2">
+                        <UserPlus className="w-4 h-4" />
+                        Criar Usuário
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -119,6 +126,7 @@ export default function AdminPanel() {
                     users={users}
                     onUpdateRole={updateUserRole}
                     onUpdateProfile={updateUserProfile}
+                    onDataChanged={refetch}
                     isRoot={isRoot}
                   />
                 )}
@@ -201,6 +209,12 @@ export default function AdminPanel() {
         open={createUserModalOpen}
         onOpenChange={setCreateUserModalOpen}
         onUserCreated={refetch}
+      />
+
+      <ResetTeamDataModal
+        open={resetTeamModalOpen}
+        onOpenChange={setResetTeamModalOpen}
+        onDataChanged={refetch}
       />
     </div>
   );
