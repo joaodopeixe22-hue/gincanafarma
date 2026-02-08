@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -21,11 +22,21 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Loader2, Crown, Shield, Users, Star, MoreVertical, Unlock, Trash2, Settings2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Eye, Loader2, Crown, Shield, Users, Star, MoreVertical, Trash2, Settings2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { AdminActionsModal } from './AdminActionsModal';
@@ -42,12 +53,17 @@ interface AdminUserTableProps {
   onUpdateProfile: (userId: string, data: { team_id?: string }) => Promise<{ error: any }>;
   onDataChanged: () => void;
   isRoot?: boolean;
+  canManageUsers?: boolean;
 }
 
-export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, onDataChanged, isRoot = false }: AdminUserTableProps) {
+export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, onDataChanged, isRoot = false, canManageUsers = false }: AdminUserTableProps) {
   const { toast } = useToast();
   const [loadingUser, setLoadingUser] = useState<string | null>(null);
   const [actionsModalUser, setActionsModalUser] = useState<{ id: string; name: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleRoleChange = async (userId: string, role: 'admin' | 'lider' | 'member') => {
     setLoadingUser(userId);
     const { error } = await onUpdateRole(userId, role);
@@ -88,6 +104,38 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, onDataCha
       toast({
         title: 'Equipe atualizada',
       });
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteTarget || deleteConfirmText !== 'CONFIRMAR') return;
+
+    setIsDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: deleteTarget.id },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({
+        title: 'Usuário excluído',
+        description: `${deleteTarget.name} foi removido do sistema.`,
+      });
+
+      setDeleteTarget(null);
+      setDeleteConfirmText('');
+      onDataChanged();
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: 'Erro ao excluir usuário',
+        description: error.message || 'Erro desconhecido',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -145,9 +193,12 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, onDataCha
               .toUpperCase()
               .slice(0, 2) || 'U';
 
-            // Root users can't have their role changed by anyone
             const isUserRoot = user.role === 'root';
-            const canEditRole = isRoot && !isUserRoot;
+            const isUserAdmin = user.role === 'admin';
+            // Admin e root podem editar roles, exceto de root users
+            const canEditRole = !isUserRoot;
+            // Root pode excluir qualquer não-root; admin pode excluir membros e líderes
+            const canDelete = canManageUsers && !isUserRoot && !(isUserAdmin && !isRoot);
 
             return (
               <TableRow key={user.id} className={cn(isUserRoot && 'bg-rose-500/5')}>
@@ -234,6 +285,21 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, onDataCha
                               <Settings2 className="w-4 h-4 mr-2" />
                               Gerenciar Dados
                             </DropdownMenuItem>
+                            {canDelete && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => setDeleteTarget({
+                                    id: user.id,
+                                    name: user.profile?.full_name || 'Usuário',
+                                  })}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Excluir Usuário
+                                </DropdownMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </>
@@ -255,6 +321,46 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, onDataCha
           onDataChanged={onDataChanged}
         />
       )}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) { setDeleteTarget(null); setDeleteConfirmText(''); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5" />
+              Excluir Usuário
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                Tem certeza que deseja excluir <strong>{deleteTarget?.name}</strong>? 
+                Esta ação é <strong>irreversível</strong> e removerá todos os dados do usuário.
+              </p>
+              <p className="text-sm">
+                Digite <strong>CONFIRMAR</strong> para prosseguir:
+              </p>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="Digite CONFIRMAR"
+                className="mt-2"
+              />
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}>
+              Cancelar
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteUser}
+              disabled={deleteConfirmText !== 'CONFIRMAR' || isDeleting}
+              className="gap-2"
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              Excluir
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

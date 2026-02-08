@@ -128,6 +128,7 @@ export default function AdminPanel() {
                     onUpdateProfile={updateUserProfile}
                     onDataChanged={refetch}
                     isRoot={isRoot}
+                    canManageUsers={canManageUsers}
                   />
                 )}
               </CardContent>

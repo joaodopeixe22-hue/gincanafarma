@@ -10,7 +10,7 @@ interface CreateUserRequest {
   password: string;
   full_name: string;
   team_id: string | null;
-  role: 'member' | 'admin';
+  role: 'member' | 'lider' | 'admin';
 }
 
 Deno.serve(async (req) => {
@@ -55,10 +55,10 @@ Deno.serve(async (req) => {
       .eq('user_id', callingUser.id)
       .single();
 
-    if (roleError || roleData?.role !== 'root') {
+    if (roleError || !['root', 'admin'].includes(roleData?.role)) {
       console.error('Role check failed:', roleError, roleData);
       return new Response(
-        JSON.stringify({ error: 'Only root users can create new users' }),
+        JSON.stringify({ error: 'Only root or admin users can create new users' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -76,9 +76,9 @@ Deno.serve(async (req) => {
     }
 
     // Validate role
-    if (!['member', 'admin'].includes(role)) {
+    if (!['member', 'lider', 'admin'].includes(role)) {
       return new Response(
-        JSON.stringify({ error: 'Invalid role. Must be "member" or "admin"' }),
+        JSON.stringify({ error: 'Invalid role. Must be "member", "lider" or "admin"' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
