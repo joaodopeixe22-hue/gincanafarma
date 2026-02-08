@@ -118,7 +118,7 @@ export function useAuth() {
     isAdmin: role === 'admin' || role === 'root', // root herda admin
     isLider: role === 'lider' || role === 'admin' || role === 'root', // admin e root herdam líder
     isMember: role === 'member' || role === 'lider' || role === 'admin' || role === 'root', // todos herdam member
-    canManageUsers: role === 'root', // apenas root pode criar usuários
+    canManageUsers: role === 'root' || role === 'admin', // root e admin podem criar/excluir usuários
     canAccessLeaderPanel: role === 'lider' || role === 'admin' || role === 'root',
     isAuthenticated: !!session,
     isLoading,

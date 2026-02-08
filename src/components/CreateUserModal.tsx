@@ -119,7 +119,7 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
             Criar Novo Usuário
           </DialogTitle>
           <DialogDescription>
-            Crie uma nova conta de usuário para o sistema. Apenas usuários root podem fazer isso.
+            Crie uma nova conta de usuário para o sistema.
           </DialogDescription>
         </DialogHeader>
 
