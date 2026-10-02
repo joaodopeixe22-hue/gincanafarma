@@ -2,7 +2,7 @@ export interface Profile {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
-  team_id: 'dna' | 'elite' | 'alcateia' | null;
+  team_id: string | null;
   bio: string | null;
   matricula: string | null;
   created_at: string;
@@ -14,11 +14,13 @@ export interface Achievement {
   name: string;
   description: string | null;
   icon: string;
-  category: 'streak' | 'kpi' | 'challenge' | 'milestone';
+  category: 'streak' | 'kpi' | 'challenge' | 'milestone' | 'learning' | 'social' | 'tasks' | 'engagement' | 'special';
   requirement_type: string | null;
   requirement_value: number | null;
   points: number;
   is_trophy: boolean;
+  manual_grant?: boolean;
+  is_active?: boolean;
   created_at: string;
 }
 

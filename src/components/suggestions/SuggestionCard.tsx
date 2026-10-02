@@ -1,3 +1,4 @@
+import { useAppConfig } from '@/hooks/data/useAppConfig';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { User, Clock, MessageSquare } from 'lucide-react';
@@ -11,14 +12,10 @@ interface SuggestionCardProps {
   showUser?: boolean;
 }
 
-const TEAM_CONFIG: Record<string, { name: string; color: string }> = {
-  dna: { name: 'DNA', color: 'text-blue-500' },
-  elite: { name: 'Elite', color: 'text-amber-500' },
-  alcateia: { name: 'Alcateia', color: 'text-emerald-500' },
-};
 
 export function SuggestionCard({ suggestion, onClick, showUser = true }: SuggestionCardProps) {
-  const teamConfig = suggestion.user_team ? TEAM_CONFIG[suggestion.user_team] : null;
+  const { teamById } = useAppConfig();
+  const team = teamById(suggestion.user_team);
 
   return (
     <Card 
@@ -41,8 +38,8 @@ export function SuggestionCard({ suggestion, onClick, showUser = true }: Suggest
               <span className="flex items-center gap-1">
                 <User className="w-3 h-3" />
                 {suggestion.user_name}
-                {teamConfig && (
-                  <span className={teamConfig.color}>• {teamConfig.name}</span>
+                {team && (
+                  <span>• {team.icon} {team.short_name}</span>
                 )}
               </span>
             )}

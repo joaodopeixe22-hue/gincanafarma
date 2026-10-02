@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/errors';
 import { useState } from 'react';
 import { Achievement, UserWithProfile } from '@/types/profile';
 import {
@@ -23,7 +24,7 @@ interface GrantAchievementModalProps {
   onOpenChange: (open: boolean) => void;
   users: UserWithProfile[];
   achievements: Achievement[];
-  onGrant: (userId: string, achievementId: string) => Promise<{ error: any }>;
+  onGrant: (userId: string, achievementId: string) => Promise<{ error: { message?: string } | null }>;
 }
 
 export function GrantAchievementModal({
@@ -48,7 +49,7 @@ export function GrantAchievementModal({
     if (error) {
       toast({
         title: 'Erro ao conceder conquista',
-        description: error.message,
+        description: errorMessage(error),
         variant: 'destructive',
       });
     } else {

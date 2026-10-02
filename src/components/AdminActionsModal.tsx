@@ -1,34 +1,24 @@
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { 
-  Unlock, 
-  Trash2, 
-  Loader2, 
-  AlertTriangle, 
-  Calendar,
-  RotateCcw,
-  CheckSquare
-} from 'lucide-react';
-
-interface LockedRecord {
-  id: string;
-  date: string;
-  ofex: number;
-  apoio: number;
-  soria: number;
-  cadastro: number;
-}
+import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, Calculator, RotateCcw, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Loading, StatusBadge } from '@/components/common';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useReviewEntry, useInvalidateEntries } from '@/hooks/data/useEntries';
+import { useLevelAndStreak } from '@/hooks/data/useRankings';
+import { useToast } from '@/hooks/use-toast';
+import { errorMessage } from '@/lib/errors';
+import { fromISODate } from '@/lib/period';
+import { sumKpis, type DailyEntry } from '@/types/db';
 
 interface AdminActionsModalProps {
   open: boolean;
@@ -38,321 +28,152 @@ interface AdminActionsModalProps {
   onDataChanged: () => void;
 }
 
-export function AdminActionsModal({ 
-  open, 
-  onOpenChange, 
-  userId, 
-  userName,
-  onDataChanged 
-}: AdminActionsModalProps) {
+/** Ações do admin sobre uma pessoa. Tudo fica registrado no livro de pontos (nada some sem rastro). */
+export function AdminActionsModal({ open, onOpenChange, userId, userName, onDataChanged }: AdminActionsModalProps) {
   const { toast } = useToast();
-  const [lockedRecords, setLockedRecords] = useState<LockedRecord[]>([]);
-  const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isUnlocking, setIsUnlocking] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [resetConfirm, setResetConfirm] = useState('');
+  const { user } = useAuth();
+  const review = useReviewEntry();
+  const invalidate = useInvalidateEntries();
+  const levelQ = useLevelAndStreak(open ? userId : undefined);
+  const [points, setPoints] = useState('');
+  const [reason, setReason] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    if (open && userId) {
-      fetchLockedRecords();
-      setResetConfirm('');
-      setSelectedRecords([]);
-    }
-  }, [open, userId]);
+  const entriesQ = useQuery({
+    queryKey: ['entries', 'admin-user', userId],
+    enabled: open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_daily_data')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: false })
+        .limit(90);
+      if (error) throw error;
+      return data as DailyEntry[];
+    },
+  });
 
-  const fetchLockedRecords = async () => {
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .from('user_daily_data')
-      .select('id, date, ofex, apoio, soria, cadastro')
-      .eq('user_id', userId)
-      .eq('is_locked', true)
-      .order('date', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching locked records:', error);
-    } else {
-      setLockedRecords(data || []);
-    }
-    setIsLoading(false);
-  };
-
-  const handleUnlockSelected = async () => {
-    if (selectedRecords.length === 0) return;
-
-    setIsUnlocking(true);
-    const { error } = await supabase
-      .from('user_daily_data')
-      .update({ is_locked: false })
-      .in('id', selectedRecords);
-
-    if (error) {
-      toast({
-        title: 'Erro ao desbloquear',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Registros desbloqueados',
-        description: `${selectedRecords.length} registro(s) desbloqueado(s) com sucesso`,
-      });
-      setSelectedRecords([]);
-      fetchLockedRecords();
+  const run = async (fn: () => Promise<unknown>, ok: string) => {
+    setBusy(true);
+    try {
+      await fn();
+      toast({ title: ok });
+      invalidate();
+      levelQ.refetch();
+      entriesQ.refetch();
       onDataChanged();
-    }
-    setIsUnlocking(false);
-  };
-
-  const handleUnlockAll = async () => {
-    setIsUnlocking(true);
-    const { error } = await supabase
-      .from('user_daily_data')
-      .update({ is_locked: false })
-      .eq('user_id', userId);
-
-    if (error) {
-      toast({
-        title: 'Erro ao desbloquear',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Todos registros desbloqueados',
-        description: 'Todos os registros do usuário foram desbloqueados',
-      });
-      fetchLockedRecords();
-      onDataChanged();
-    }
-    setIsUnlocking(false);
-  };
-
-  const handleResetUserData = async () => {
-    if (resetConfirm !== 'CONFIRMAR') {
-      toast({
-        title: 'Confirmação necessária',
-        description: 'Digite CONFIRMAR para prosseguir',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsResetting(true);
-
-    // Delete all user daily data
-    const { error: dataError } = await supabase
-      .from('user_daily_data')
-      .delete()
-      .eq('user_id', userId);
-
-    if (dataError) {
-      toast({
-        title: 'Erro ao zerar dados',
-        description: dataError.message,
-        variant: 'destructive',
-      });
-      setIsResetting(false);
-      return;
-    }
-
-    // Reset user level to 1 with 0 points
-    const { error: levelError } = await supabase
-      .from('user_levels')
-      .update({ 
-        level_number: 1, 
-        level_name: 'Iniciante', 
-        total_points: 0 
-      })
-      .eq('user_id', userId);
-
-    if (levelError) {
-      console.error('Error resetting user level:', levelError);
-    }
-
-    toast({
-      title: 'Dados zerados',
-      description: `Todos os dados de ${userName} foram zerados`,
-    });
-
-    setResetConfirm('');
-    fetchLockedRecords();
-    onDataChanged();
-    setIsResetting(false);
-  };
-
-  const toggleRecord = (recordId: string) => {
-    setSelectedRecords(prev => 
-      prev.includes(recordId) 
-        ? prev.filter(id => id !== recordId)
-        : [...prev, recordId]
-    );
-  };
-
-  const toggleAll = () => {
-    if (selectedRecords.length === lockedRecords.length) {
-      setSelectedRecords([]);
-    } else {
-      setSelectedRecords(lockedRecords.map(r => r.id));
+      setPoints('');
+      setReason('');
+      setConfirm('');
+    } catch (e) {
+      toast({ title: 'Não foi possível', description: errorMessage(e), variant: 'destructive' });
+    } finally {
+      setBusy(false);
     }
   };
+
+  const rpc = async (fn: string, args: Record<string, unknown>) => {
+    const { error } = await supabase.rpc(fn as never, args as never);
+    if (error) throw error;
+  };
+
+  const self = userId === user?.id;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Gerenciar Dados: {userName}</DialogTitle>
-          <DialogDescription>
-            Desbloquear registros ou zerar pontuação do usuário
-          </DialogDescription>
+          <DialogTitle>Ações · {userName}</DialogTitle>
+          <DialogDescription>Saldo atual: {levelQ.data?.totalPoints ?? '…'} pts</DialogDescription>
         </DialogHeader>
-
-        <Tabs defaultValue="unlock" className="mt-4">
+        <Tabs defaultValue="entries">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="unlock" className="gap-2">
-              <Unlock className="w-4 h-4" />
-              Desbloquear
-            </TabsTrigger>
-            <TabsTrigger value="reset" className="gap-2">
-              <RotateCcw className="w-4 h-4" />
-              Zerar
-            </TabsTrigger>
+            <TabsTrigger value="entries">Lançamentos</TabsTrigger>
+            <TabsTrigger value="points">Pontos</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="unlock" className="space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Registros Bloqueados
-                </CardTitle>
-                <CardDescription>
-                  {lockedRecords.length} registro(s) bloqueado(s)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  </div>
-                ) : lockedRecords.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-4">
-                    Nenhum registro bloqueado
-                  </p>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-between mb-3">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={toggleAll}
-                        className="gap-2"
-                      >
-                        <CheckSquare className="w-4 h-4" />
-                        {selectedRecords.length === lockedRecords.length ? 'Desmarcar' : 'Selecionar'} Todos
-                      </Button>
-                      <Badge variant="secondary">
-                        {selectedRecords.length} selecionado(s)
-                      </Badge>
+          <TabsContent value="entries" className="space-y-2">
+            <p className="text-xs text-muted-foreground">Reabrir um dia aprovado estorna os pontos e devolve o lançamento para aprovação.</p>
+            {entriesQ.isLoading ? (
+              <Loading />
+            ) : (
+              <ScrollArea className="h-72 rounded-lg border">
+                <div className="divide-y">
+                  {(entriesQ.data ?? []).map((e) => (
+                    <div key={e.id} className="flex items-center gap-2 p-2 text-sm">
+                      <span className="w-20 capitalize">{format(fromISODate(e.date), 'EEE dd/MM', { locale: ptBR })}</span>
+                      <StatusBadge status={e.status} />
+                      <span className="ml-auto font-semibold tabular-nums">{sumKpis(e)}</span>
+                      {e.status === 'approved' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={busy || self}
+                          onClick={() => run(() => review.mutateAsync({ id: e.id, decision: 'reopen', note: 'Reaberto pelo admin' }), 'Reaberto')}
+                        >
+                          <RotateCcw className="mr-1 h-3.5 w-3.5" /> Reabrir
+                        </Button>
+                      )}
                     </div>
-                    <ScrollArea className="h-[200px] pr-4">
-                      <div className="space-y-2">
-                        {lockedRecords.map((record) => (
-                          <div 
-                            key={record.id}
-                            className="flex items-center gap-3 p-2 rounded-lg border hover:bg-muted/50 cursor-pointer"
-                            onClick={() => toggleRecord(record.id)}
-                          >
-                            <Checkbox 
-                              checked={selectedRecords.includes(record.id)}
-                              onCheckedChange={() => toggleRecord(record.id)}
-                            />
-                            <div className="flex-1">
-                              <p className="font-medium text-sm">
-                                {format(new Date(record.date + 'T12:00:00'), "dd 'de' MMMM, yyyy", { locale: ptBR })}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                OFEX: {record.ofex} | Apoio: {record.apoio} | Soria: {record.soria} | Cadastro: {record.cadastro}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                    <div className="flex gap-2 mt-4">
-                      <Button 
-                        onClick={handleUnlockSelected}
-                        disabled={selectedRecords.length === 0 || isUnlocking}
-                        className="flex-1 gap-2"
-                      >
-                        {isUnlocking ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Unlock className="w-4 h-4" />
-                        )}
-                        Desbloquear Selecionados
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={handleUnlockAll}
-                        disabled={isUnlocking}
-                      >
-                        Todos
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                  ))}
+                  {!entriesQ.data?.length && <p className="p-4 text-center text-sm text-muted-foreground">Sem lançamentos</p>}
+                </div>
+              </ScrollArea>
+            )}
           </TabsContent>
 
-          <TabsContent value="reset" className="space-y-4">
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Atenção!</strong> Esta ação irá apagar permanentemente todos os dados de KPI e zerar a pontuação do usuário. Esta ação não pode ser desfeita.
-              </AlertDescription>
-            </Alert>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2 text-destructive">
-                  <Trash2 className="w-4 h-4" />
-                  Zerar Dados do Usuário
-                </CardTitle>
-                <CardDescription>
-                  Remove todos os registros de KPI e reseta o nível para 1
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          <TabsContent value="points" className="space-y-4">
+            {self && (
+              <Alert>
+                <AlertDescription>Você não pode ajustar os próprios pontos.</AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-2 rounded-xl border p-3">
+              <p className="flex items-center gap-2 text-sm font-semibold"><Calculator className="h-4 w-4" /> Ajuste manual</p>
+              <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="text-sm font-medium">
-                    Digite CONFIRMAR para prosseguir:
-                  </label>
-                  <input 
-                    type="text"
-                    value={resetConfirm}
-                    onChange={(e) => setResetConfirm(e.target.value.toUpperCase())}
-                    className="mt-2 w-full px-3 py-2 border rounded-md bg-background"
-                    placeholder="CONFIRMAR"
-                  />
+                  <Label className="text-xs">Pontos (+/−)</Label>
+                  <Input type="number" value={points} onChange={(e) => setPoints(e.target.value)} placeholder="-20" />
                 </div>
-                <Button 
-                  variant="destructive"
-                  onClick={handleResetUserData}
-                  disabled={resetConfirm !== 'CONFIRMAR' || isResetting}
-                  className="w-full gap-2"
+                <div className="col-span-2">
+                  <Label className="text-xs">Motivo (fica no extrato)</Label>
+                  <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ex.: correção de lançamento duplicado" />
+                </div>
+              </div>
+              <Button
+                size="sm"
+                disabled={busy || self || !+points || !reason.trim()}
+                onClick={() => run(() => rpc('adjust_points', { _user: userId, _points: +points, _reason: reason }), 'Ajuste registrado')}
+              >
+                Registrar ajuste
+              </Button>
+            </div>
+
+            <div className="space-y-2 rounded-xl border border-destructive/40 p-3">
+              <p className="flex items-center gap-2 text-sm font-semibold text-destructive"><AlertTriangle className="h-4 w-4" /> Zona de risco</p>
+              <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Motivo" />
+              <Input value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Digite CONFIRMAR" />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={busy || self || confirm !== 'CONFIRMAR' || !reason.trim()}
+                  onClick={() => run(() => rpc('reset_points', { _user: userId, _reason: reason }), 'Pontos zerados (histórico mantido)')}
                 >
-                  {isResetting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
-                  Zerar Todos os Dados
+                  <RotateCcw className="mr-1 h-4 w-4" /> Zerar pontos
                 </Button>
-              </CardContent>
-            </Card>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={busy || self || confirm !== 'CONFIRMAR'}
+                  onClick={() => run(() => rpc('delete_entries', { _user: userId }), 'Lançamentos excluídos')}
+                >
+                  <Trash2 className="mr-1 h-4 w-4" /> Excluir todos os lançamentos
+                </Button>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>

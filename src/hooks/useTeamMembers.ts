@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { startOfDay, startOfWeek, endOfDay, endOfWeek, format } from 'date-fns';
+import { startOfDay, format } from 'date-fns';
+import { useAppConfig } from '@/hooks/data/useAppConfig';
+import { periodRange } from '@/lib/period';
 
 interface TeamMember {
   id: string;
@@ -79,6 +81,7 @@ const emptyGoals: MemberGoals = {
 };
 
 export function useTeamMembers(teamId?: string | null) {
+  const { weekStartsOn } = useAppConfig();
   const [members, setMembers] = useState<MemberWithData[]>([]);
   const [teamTotals, setTeamTotals] = useState<TeamTotals>({
     ...emptyTotals,
@@ -99,8 +102,7 @@ export function useTeamMembers(teamId?: string | null) {
 
       const today = new Date();
       const todayStr = format(startOfDay(today), 'yyyy-MM-dd');
-      const weekStart = format(startOfWeek(today, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-      const weekEnd = format(endOfWeek(today, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+      const { startStr: weekStart, endStr: weekEnd } = periodRange('week', today, weekStartsOn);
 
       // Buscar membros da equipe
       const { data: profiles } = await supabase
@@ -123,6 +125,7 @@ export function useTeamMembers(teamId?: string | null) {
           .from('user_daily_data')
           .select('*')
           .in('user_id', memberIds)
+          .eq('status', 'approved')
           .order('date', { ascending: false }),
         supabase
           .from('member_goals')
@@ -225,7 +228,7 @@ export function useTeamMembers(teamId?: string | null) {
     };
 
     fetchTeamData();
-  }, [teamId]);
+  }, [teamId, weekStartsOn]);
 
   return {
     members,

@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import { Achievement } from '@/types/profile';
-import { 
-  Trophy, Star, Medal, Crown, Award, Target, Sparkles,
-  CalendarCheck, CalendarHeart, TrendingUp, Sunrise, Footprints,
-  Circle, CircleDot,
-  LucideIcon
-} from 'lucide-react';
+import { Trophy, Lock, Sparkles } from 'lucide-react';
+import { ACHIEVEMENT_ICONS as iconMap, CATEGORY_COLORS, CATEGORY_LABELS } from '@/lib/achievements';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -15,22 +11,6 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AchievementDetailSheet } from './AchievementDetailSheet';
 
-const iconMap: Record<string, LucideIcon> = {
-  'trophy': Trophy,
-  'star': Star,
-  'medal': Medal,
-  'crown': Crown,
-  'award': Award,
-  'target': Target,
-  'sparkles': Sparkles,
-  'calendar-check': CalendarCheck,
-  'calendar-heart': CalendarHeart,
-  'trending-up': TrendingUp,
-  'sunrise': Sunrise,
-  'footprints': Footprints,
-  'circle': Circle,
-  'circle-dot': CircleDot,
-};
 
 interface AchievementBadgeProps {
   achievement: Achievement;
@@ -63,12 +43,7 @@ export function AchievementBadge({
     lg: 'w-6 h-6 sm:w-7 sm:h-7',
   };
 
-  const categoryColors = {
-    streak: 'from-orange-500 to-amber-500',
-    kpi: 'from-blue-500 to-cyan-500',
-    challenge: 'from-purple-500 to-pink-500',
-    milestone: 'from-emerald-500 to-green-500',
-  };
+  const categoryColors = CATEGORY_COLORS;
 
   const badgeElement = (
     <div 

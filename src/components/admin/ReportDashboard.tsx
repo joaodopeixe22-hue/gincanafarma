@@ -1,212 +1,140 @@
 import { forwardRef } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Trophy, Target, TrendingUp, Users } from 'lucide-react';
+import { Gauge, Target, TrendingUp, Trophy, Users } from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TeamBadge } from '@/components/TeamBadge';
-import { WeeklyReportData } from '@/hooks/useWeeklyReport';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { KPI_LABELS } from '@/types/gincana';
+import { useAppConfig } from '@/hooks/data/useAppConfig';
+import type { WeeklyReportData } from '@/hooks/useWeeklyReport';
+import { fromISODate } from '@/lib/period';
+import type { KpiKey } from '@/types/db';
 
-interface ReportDashboardProps {
-  data: WeeklyReportData;
-}
+const medal = (i: number) =>
+  i === 0 ? 'bg-amber-500 text-amber-950' : i === 1 ? 'bg-gray-400 text-gray-950' : i === 2 ? 'bg-amber-700 text-amber-50' : 'bg-muted text-muted-foreground';
 
-const TEAM_COLORS = {
-  dna: 'hsl(var(--chart-1))',
-  elite: 'hsl(var(--chart-2))',
-  alcateia: 'hsl(var(--chart-3))',
-};
+export const ReportDashboard = forwardRef<HTMLDivElement, { data: WeeklyReportData }>(({ data }, ref) => {
+  const { teams, kpis, kpiLabel, storeName } = useAppConfig();
+  const { weekLabel, teamRankings, teamEngagement, memberPerformance, engagement, totals, dailyData } = data;
+  const chartData = dailyData.map((d) => ({
+    ...d,
+    label: format(fromISODate(String(d.date)), 'EEE', { locale: ptBR }),
+    fullDate: format(fromISODate(String(d.date)), 'dd/MM'),
+  }));
 
-const TEAM_NAMES = {
-  dna: 'DNA',
-  elite: 'Elite',
-  alcateia: 'Alcateia',
-};
-
-export const ReportDashboard = forwardRef<HTMLDivElement, ReportDashboardProps>(
-  ({ data }, ref) => {
-    const { weekLabel, teamRankings, memberPerformance, totals, dailyData } = data;
-
-    // Prepare chart data
-    const chartData = dailyData.map(day => ({
-      date: format(new Date(day.date), 'EEE', { locale: ptBR }),
-      fullDate: format(new Date(day.date), 'dd/MM'),
-      dna: day.dna.ofex + day.dna.apoio + day.dna.soria + day.dna.cadastro,
-      elite: day.elite.ofex + day.elite.apoio + day.elite.soria + day.elite.cadastro,
-      alcateia: day.alcateia.ofex + day.alcateia.apoio + day.alcateia.soria + day.alcateia.cadastro,
-    }));
-
-    const top5Members = memberPerformance.slice(0, 5);
-
-    return (
-      <div
-        ref={ref}
-        className="p-6 space-y-6 bg-background rounded-2xl border border-border"
-      >
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-foreground">Relatório Semanal</h2>
-          <p className="text-lg text-muted-foreground">{weekLabel}</p>
-        </div>
-
-        {/* Total Stats */}
-        <div className="grid grid-cols-5 gap-3">
-          {[
-            { label: 'Total', value: totals.total, icon: Trophy, color: 'bg-primary/10 text-primary' },
-            { label: KPI_LABELS.ofex, value: totals.ofex, icon: Target, color: 'bg-blue-500/10 text-blue-500' },
-            { label: KPI_LABELS.apoio, value: totals.apoio, icon: Target, color: 'bg-green-500/10 text-green-500' },
-            { label: KPI_LABELS.soria, value: totals.soria, icon: Target, color: 'bg-amber-500/10 text-amber-500' },
-            { label: KPI_LABELS.cadastro, value: totals.cadastro, icon: Target, color: 'bg-rose-500/10 text-rose-500' },
-          ].map(stat => (
-            <Card key={stat.label} className="border-border/50">
-              <CardContent className="p-4 text-center">
-                <div className={`mx-auto w-10 h-10 rounded-lg ${stat.color} flex items-center justify-center mb-2`}>
-                  <stat.icon className="w-5 h-5" />
-                </div>
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
-                <p className="text-xl font-bold">{stat.value}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Team Rankings */}
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Trophy className="w-5 h-5 text-primary" />
-              Ranking das Equipes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {teamRankings.map((team, index) => (
-                <div
-                  key={team.team}
-                  className="flex items-center gap-4 p-3 rounded-lg bg-muted/30"
-                >
-                  <div className={`
-                    w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                    ${index === 0 ? 'bg-amber-500 text-amber-950' : 
-                      index === 1 ? 'bg-gray-400 text-gray-950' : 
-                      'bg-amber-700 text-amber-50'}
-                  `}>
-                    {index + 1}º
-                  </div>
-                  <TeamBadge teamId={team.team as 'dna' | 'elite' | 'alcateia'} size="md" />
-                  <div className="flex-1 text-right">
-                    <p className="font-bold text-lg">{team.total} pts</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Chart */}
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              Evolução Diária
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                  />
-                  <YAxis 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                    }}
-                    labelFormatter={(_, payload) => payload[0]?.payload?.fullDate || ''}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="dna"
-                    name="DNA"
-                    stroke={TEAM_COLORS.dna}
-                    fill={TEAM_COLORS.dna}
-                    fillOpacity={0.3}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="elite"
-                    name="Elite"
-                    stroke={TEAM_COLORS.elite}
-                    fill={TEAM_COLORS.elite}
-                    fillOpacity={0.3}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="alcateia"
-                    name="Alcateia"
-                    stroke={TEAM_COLORS.alcateia}
-                    fill={TEAM_COLORS.alcateia}
-                    fillOpacity={0.3}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top 5 Members */}
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Users className="w-5 h-5 text-primary" />
-              Top 5 Membros
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {top5Members.map((member, index) => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-3 p-2 rounded-lg bg-muted/30"
-                >
-                  <span className={`
-                    w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
-                    ${index === 0 ? 'bg-amber-500 text-amber-950' : 
-                      index === 1 ? 'bg-gray-400 text-gray-950' : 
-                      index === 2 ? 'bg-amber-700 text-amber-50' :
-                      'bg-muted text-muted-foreground'}
-                  `}>
-                    {index + 1}
-                  </span>
-                  <span className="flex-1 font-medium truncate">{member.name}</span>
-                  {member.team && <TeamBadge teamId={member.team as 'dna' | 'elite' | 'alcateia'} size="sm" />}
-                  <span className="font-bold">{member.total} pts</span>
-                </div>
-              ))}
-              {top5Members.length === 0 && (
-                <p className="text-center text-muted-foreground py-4">
-                  Nenhum dado disponível
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Footer */}
-        <div className="text-center text-xs text-muted-foreground pt-4 border-t border-border/50">
-          Circuito Farma • Relatório gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
-        </div>
+  return (
+    <div ref={ref} className="space-y-6 rounded-2xl border border-border bg-background p-6">
+      <div className="space-y-1 text-center">
+        <h2 className="text-2xl font-bold">Relatório Semanal</h2>
+        <p className="text-lg text-muted-foreground">{weekLabel}</p>
       </div>
-    );
-  }
-);
 
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        {[{ label: 'Total', value: totals.total }, ...kpis.map((k) => ({ label: kpiLabel(k.key), value: totals[k.key as KpiKey] }))].map((s) => (
+          <Card key={s.label} className="border-border/50">
+            <CardContent className="p-4 text-center">
+              <Target className="mx-auto mb-1 h-5 w-5 text-primary" />
+              <p className="text-xs text-muted-foreground">{s.label}</p>
+              <p className="text-xl font-bold">{s.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg"><Gauge className="h-5 w-5 text-primary" />Engajamento por equipe</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {teamEngagement.map((t, i) => (
+              <div key={t.team.id} className="flex items-center gap-3 rounded-lg bg-muted/30 p-2">
+                <span className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${medal(i)}`}>{i + 1}º</span>
+                <TeamBadge teamId={t.team.id} />
+                <span className="ml-auto text-lg font-bold">{t.indice == null ? '—' : Math.round(t.indice)}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg"><Trophy className="h-5 w-5 text-primary" />KPIs por equipe</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {teamRankings.map((t, i) => (
+              <div key={t.teamId} className="flex items-center gap-3 rounded-lg bg-muted/30 p-2">
+                <span className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${medal(i)}`}>{i + 1}º</span>
+                <TeamBadge teamId={t.teamId} />
+                <span className="ml-auto text-lg font-bold">{t.total}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-border/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-lg"><TrendingUp className="h-5 w-5 text-primary" />Evolução diária (aprovado)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[200px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                <XAxis dataKey="label" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
+                  labelFormatter={(_, p) => p[0]?.payload?.fullDate || ''}
+                />
+                {teams.map((t) => (
+                  <Area key={t.id} type="monotone" dataKey={t.id} name={t.short_name} stroke={t.color} fill={t.color} fillOpacity={0.25} />
+                ))}
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg"><Gauge className="h-5 w-5 text-primary" />Top 5 engajamento</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {engagement.slice(0, 5).map((m, i) => (
+              <div key={m.user_id} className="flex items-center gap-3 rounded-lg bg-muted/30 p-2">
+                <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${medal(i)}`}>{i + 1}</span>
+                <span className="flex-1 truncate font-medium">{m.full_name}</span>
+                <TeamBadge teamId={m.team_id} size="sm" showName={false} />
+                <span className="font-bold">{Math.round(Number(m.indice))}</span>
+              </div>
+            ))}
+            {!engagement.length && <p className="py-4 text-center text-muted-foreground">Nenhum dado</p>}
+          </CardContent>
+        </Card>
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg"><Users className="h-5 w-5 text-primary" />Top 5 KPIs</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {memberPerformance.slice(0, 5).map((m, i) => (
+              <div key={m.user_id} className="flex items-center gap-3 rounded-lg bg-muted/30 p-2">
+                <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${medal(i)}`}>{i + 1}</span>
+                <span className="flex-1 truncate font-medium">{m.full_name}</span>
+                <TeamBadge teamId={m.team_id} size="sm" showName={false} />
+                <span className="font-bold">{m.total}</span>
+              </div>
+            ))}
+            {!memberPerformance.length && <p className="py-4 text-center text-muted-foreground">Nenhum dado</p>}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="border-t border-border/50 pt-4 text-center text-xs text-muted-foreground">
+        {storeName} • Relatório gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
+      </div>
+    </div>
+  );
+});
 ReportDashboard.displayName = 'ReportDashboard';

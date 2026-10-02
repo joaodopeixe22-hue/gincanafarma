@@ -1,3 +1,4 @@
+import { CATEGORY_LABELS } from '@/lib/achievements';
 import { Achievement, UserAchievement } from '@/types/profile';
 import { AchievementBadge } from './AchievementBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,12 +25,7 @@ export function AchievementList({
     return userAchievements.find(ua => ua.achievement_id === achievementId)?.achieved_at;
   };
 
-  const categoryLabels = {
-    streak: 'Sequência',
-    kpi: 'Pontuação',
-    challenge: 'Desafios',
-    milestone: 'Marcos',
-  };
+  const categoryLabels = CATEGORY_LABELS;
 
   const groupedBadges = badges.reduce((acc, badge) => {
     if (!acc[badge.category]) acc[badge.category] = [];

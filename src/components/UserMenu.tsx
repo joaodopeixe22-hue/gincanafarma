@@ -21,6 +21,7 @@ import { useTourState } from '@/hooks/useTourState';
 import { useSuggestions } from '@/hooks/useSuggestions';
 import { SuggestionForm } from '@/components/suggestions/SuggestionForm';
 import { useViewMode, ViewMode } from '@/contexts/ViewModeContext';
+import { useDirectory } from '@/hooks/data/useDirectory';
 
 export function UserMenu() {
   const { user, role, isRoot, isAdmin, isLider, isMember, isAuthenticated, isLoading, canManageUsers, canAccessLeaderPanel, signOut } = useAuth();
@@ -29,6 +30,7 @@ export function UserMenu() {
   const { createSuggestion } = useSuggestions(user?.id);
   const [suggestionFormOpen, setSuggestionFormOpen] = useState(false);
   const { mode, setViewMode } = useViewMode();
+  const { me } = useDirectory();
   const handleResetTour = () => {
     resetTour();
     toast({
@@ -119,15 +121,16 @@ export function UserMenu() {
           ) : (
             <User className="w-4 h-4" />
           )}
-          <span className="hidden sm:inline max-w-24 truncate">
-            {user?.email?.split('@')[0]}
+          <span className="hidden sm:inline max-w-28 truncate">
+            {me?.full_name?.split(' ')[0] ?? user?.email?.split('@')[0]}
           </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <div className="flex flex-col gap-1">
-            <span className="font-medium truncate">{user?.email}</span>
+            <span className="font-medium truncate">{me?.full_name ?? user?.email?.split('@')[0]}</span>
+            <span className="text-xs text-muted-foreground">Matrícula {user?.email?.split('@')[0]}</span>
             {getRoleBadge()}
           </div>
         </DropdownMenuLabel>

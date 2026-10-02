@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/errors';
 import { useState } from 'react';
 import { UserWithProfile } from '@/types/profile';
 import {
@@ -40,17 +41,13 @@ import { Eye, Loader2, Crown, Shield, Users, Star, MoreVertical, Trash2, Setting
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { AdminActionsModal } from './AdminActionsModal';
+import { useAppConfig } from '@/hooks/data/useAppConfig';
 
-const teamConfig = {
-  dna: { name: 'DNA', color: 'bg-blue-500' },
-  elite: { name: 'Elite', color: 'bg-purple-500' },
-  alcateia: { name: 'Alcateia', color: 'bg-amber-500' },
-};
 
 interface AdminUserTableProps {
   users: UserWithProfile[];
-  onUpdateRole: (userId: string, role: 'admin' | 'lider' | 'member') => Promise<{ error: any }>;
-  onUpdateProfile: (userId: string, data: { team_id?: string }) => Promise<{ error: any }>;
+  onUpdateRole: (userId: string, role: 'admin' | 'lider' | 'member') => Promise<{ error: { message?: string } | null }>;
+  onUpdateProfile: (userId: string, data: { team_id?: string }) => Promise<{ error: { message?: string } | null }>;
   onDataChanged: () => void;
   isRoot?: boolean;
   canManageUsers?: boolean;
@@ -58,6 +55,7 @@ interface AdminUserTableProps {
 
 export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, onDataChanged, isRoot = false, canManageUsers = false }: AdminUserTableProps) {
   const { toast } = useToast();
+  const { teams } = useAppConfig();
   const [loadingUser, setLoadingUser] = useState<string | null>(null);
   const [actionsModalUser, setActionsModalUser] = useState<{ id: string; name: string } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
@@ -78,7 +76,7 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, onDataCha
     if (error) {
       toast({
         title: 'Erro ao atualizar papel',
-        description: error.message,
+        description: errorMessage(error),
         variant: 'destructive',
       });
     } else {
@@ -97,7 +95,7 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, onDataCha
     if (error) {
       toast({
         title: 'Erro ao atualizar equipe',
-        description: error.message,
+        description: errorMessage(error),
         variant: 'destructive',
       });
     } else {
@@ -127,11 +125,11 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, onDataCha
       setDeleteTarget(null);
       setDeleteConfirmText('');
       onDataChanged();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting user:', error);
       toast({
         title: 'Erro ao excluir usuário',
-        description: error.message || 'Erro desconhecido',
+        description: errorMessage(error, 'Erro desconhecido'),
         variant: 'destructive',
       });
     } finally {
@@ -185,7 +183,6 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, onDataCha
         </TableHeader>
         <TableBody>
           {users.map((user) => {
-            const team = user.profile?.team_id ? teamConfig[user.profile.team_id] : null;
             const initials = user.profile?.full_name
               ?.split(' ')
               .map(n => n[0])
@@ -230,9 +227,11 @@ export function AdminUserTable({ users, onUpdateRole, onUpdateProfile, onDataCha
                       <SelectValue placeholder="Equipe" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="dna">DNA</SelectItem>
-                      <SelectItem value="elite">Elite</SelectItem>
-                      <SelectItem value="alcateia">Alcateia</SelectItem>
+                      {teams.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.icon} {t.short_name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </TableCell>

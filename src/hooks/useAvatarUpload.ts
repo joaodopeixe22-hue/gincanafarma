@@ -50,7 +50,7 @@ export function useAvatarUpload() {
         .getPublicUrl(fileName);
 
       return publicUrl;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error uploading avatar:', error);
       toast.error('Erro ao fazer upload da imagem');
       return null;

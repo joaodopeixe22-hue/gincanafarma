@@ -1,10 +1,6 @@
 import { Achievement } from '@/types/profile';
-import { 
-  Trophy, Star, Medal, Crown, Award, Target, Sparkles,
-  CalendarCheck, CalendarHeart, TrendingUp, Sunrise, Footprints,
-  Circle, CircleDot, Lock,
-  LucideIcon
-} from 'lucide-react';
+import { Trophy, Lock, Sparkles } from 'lucide-react';
+import { ACHIEVEMENT_ICONS as iconMap, CATEGORY_COLORS, CATEGORY_LABELS } from '@/lib/achievements';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {
@@ -15,36 +11,10 @@ import {
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 
-const iconMap: Record<string, LucideIcon> = {
-  'trophy': Trophy,
-  'star': Star,
-  'medal': Medal,
-  'crown': Crown,
-  'award': Award,
-  'target': Target,
-  'sparkles': Sparkles,
-  'calendar-check': CalendarCheck,
-  'calendar-heart': CalendarHeart,
-  'trending-up': TrendingUp,
-  'sunrise': Sunrise,
-  'footprints': Footprints,
-  'circle': Circle,
-  'circle-dot': CircleDot,
-};
 
-const categoryLabels: Record<string, string> = {
-  streak: 'Sequência',
-  kpi: 'Pontuação',
-  challenge: 'Desafios',
-  milestone: 'Marcos',
-};
+const categoryLabels = CATEGORY_LABELS;
 
-const categoryColors: Record<string, string> = {
-  streak: 'from-orange-500 to-amber-500',
-  kpi: 'from-blue-500 to-cyan-500',
-  challenge: 'from-purple-500 to-pink-500',
-  milestone: 'from-emerald-500 to-green-500',
-};
+const categoryColors = CATEGORY_COLORS;
 
 interface AchievementDetailSheetProps {
   achievement: Achievement | null;

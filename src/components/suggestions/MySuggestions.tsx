@@ -10,7 +10,7 @@ import { Suggestion } from '@/hooks/useSuggestions';
 interface MySuggestionsProps {
   suggestions: Suggestion[];
   isLoading: boolean;
-  onCreateSuggestion: (data: { title: string; message: string; category: string }) => Promise<{ error: any }>;
+  onCreateSuggestion: (data: { title: string; message: string; category: string }) => Promise<{ error: { message?: string } | null }>;
 }
 
 export function MySuggestions({ suggestions, isLoading, onCreateSuggestion }: MySuggestionsProps) {

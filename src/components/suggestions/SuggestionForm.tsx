@@ -23,7 +23,7 @@ import { CATEGORY_CONFIG } from './SuggestionBadge';
 interface SuggestionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { title: string; message: string; category: string }) => Promise<{ error: any }>;
+  onSubmit: (data: { title: string; message: string; category: string }) => Promise<{ error: { message?: string } | null }>;
 }
 
 export function SuggestionForm({ open, onOpenChange, onSubmit }: SuggestionFormProps) {

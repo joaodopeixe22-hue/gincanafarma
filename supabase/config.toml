@@ -1,13 +1,7 @@
 project_id = "wucpfgesqsxoausnvwzj"
 
-[functions.check-achievements]
-verify_jwt = false
-
 [functions.create-user]
 verify_jwt = false
 
 [functions.delete-user]
-verify_jwt = false
-
-[functions.setup-root-user]
 verify_jwt = false

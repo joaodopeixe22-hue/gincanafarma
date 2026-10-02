@@ -21,6 +21,16 @@ const NOTIFICATION_ICONS: Record<string, string> = {
   goal_reminder: '🎯',
   celebration: '🎉',
   urgent: '⚠️',
+  entry_approved: '✅',
+  entry_rejected: '↩️',
+  achievement: '🏅',
+  level_up: '⬆️',
+  recognition: '💛',
+  task: '📝',
+  task_rejected: '↩️',
+  challenge: '🚩',
+  challenge_completed: '🏁',
+  points_adjustment: '🧮',
 };
 
 export function NotificationBell({ userId }: NotificationBellProps) {

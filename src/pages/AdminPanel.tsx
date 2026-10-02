@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { useAchievements } from '@/hooks/useAchievements';
@@ -14,7 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Loader2, Users, Trophy, Award, UserPlus, Crown, Lightbulb, BarChart3, RotateCcw } from 'lucide-react';
+import { Loader2, Users, Trophy, Award, UserPlus, Crown, Lightbulb, BarChart3, RotateCcw, Settings } from 'lucide-react';
+import { PageHeader } from '@/components/common';
+import { SettingsPanel } from '@/components/admin/SettingsPanel';
 
 export default function AdminPanel() {
   const { isAdmin, isRoot, isLoading: authLoading, canManageUsers, user } = useAuth();
@@ -37,31 +39,21 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Button asChild variant="ghost" size="sm" className="gap-2">
-            <Link to="/">
-              <ArrowLeft className="w-4 h-4" />
-              Voltar
-            </Link>
-          </Button>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold">Painel Administrativo</h1>
-            {isRoot && (
-              <span className="flex items-center gap-1 text-xs font-medium text-rose-500 bg-rose-500/10 px-2 py-1 rounded-full">
-                <Crown className="w-3 h-3" />
-                Root
-              </span>
-            )}
-          </div>
-          <div className="w-20" /> {/* Spacer for centering */}
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="mx-auto max-w-5xl space-y-4">
+      <PageHeader
+        title="Administração"
+        icon={<Settings className="h-6 w-6 text-primary" />}
+        actions={
+          isRoot && (
+            <span className="flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-1 text-xs font-medium text-rose-500">
+              <Crown className="h-3 w-3" /> Root
+            </span>
+          )
+        }
+      />
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList>
+          <div className="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:px-0">
+          <TabsList className="w-max">
             <TabsTrigger value="users" className="gap-2">
               <Users className="w-4 h-4" />
               Usuários
@@ -83,7 +75,12 @@ export default function AdminPanel() {
               <BarChart3 className="w-4 h-4" />
               Relatórios
             </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <Settings className="w-4 h-4" />
+              Configurações
+            </TabsTrigger>
           </TabsList>
+          </div>
 
           <TabsContent value="users">
             <Card>
@@ -173,6 +170,7 @@ export default function AdminPanel() {
                           <p className="text-xs text-primary mt-1">
                             {achievement.points} pontos
                             {achievement.is_trophy && ' • 🏆 Troféu'}
+                            {achievement.manual_grant ? ' • concedida pelo líder' : ' • automática'}
                           </p>
                         </div>
                       </div>
@@ -195,8 +193,11 @@ export default function AdminPanel() {
           <TabsContent value="reports">
             <WeeklyReportViewer />
           </TabsContent>
+
+          <TabsContent value="settings">
+            <SettingsPanel />
+          </TabsContent>
         </Tabs>
-      </main>
 
       <GrantAchievementModal
         open={grantModalOpen}

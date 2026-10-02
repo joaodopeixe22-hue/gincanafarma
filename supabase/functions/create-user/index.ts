@@ -75,6 +75,14 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Admin comum não cria outro admin (só o root)
+    if (role === 'admin' && roleData?.role !== 'root') {
+      return new Response(
+        JSON.stringify({ error: 'Apenas o root pode criar administradores' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Validate role
     if (!['member', 'lider', 'admin'].includes(role)) {
       return new Response(
@@ -120,6 +128,10 @@ Deno.serve(async (req) => {
       user_metadata: {
         full_name,
       },
+      // Marca a conta como criada pelo painel: só essas recebem papel no app
+      app_metadata: {
+        created_by_admin: true,
+      },
     });
 
     if (createError) {
@@ -144,11 +156,11 @@ Deno.serve(async (req) => {
       // Don't fail the whole operation, just log
     }
 
-    // Update user role (the trigger creates a 'member' role by default)
+    // Define o papel (o gatilho cria 'member' para contas criadas pelo painel)
     const { error: updateRoleError } = await adminClient
       .from('user_roles')
-      .update({ role })
-      .eq('user_id', userId);
+      .upsert({ user_id: userId, role }, { onConflict: 'user_id,role' });
+    await adminClient.from('user_roles').delete().eq('user_id', userId).neq('role', role);
 
     if (updateRoleError) {
       console.error('Role update error:', updateRoleError);

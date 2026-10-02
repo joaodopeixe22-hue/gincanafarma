@@ -1,12 +1,17 @@
 import { useState } from 'react';
+import { AlertTriangle, RotateCcw } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { AlertTriangle, Trash2, Loader2, Users } from 'lucide-react';
+import { useAppConfig } from '@/hooks/data/useAppConfig';
+import { useAuth } from '@/hooks/useAuth';
+import { useInvalidateEntries } from '@/hooks/data/useEntries';
+import { useToast } from '@/hooks/use-toast';
+import { errorMessage } from '@/lib/errors';
 
 interface ResetTeamDataModalProps {
   open: boolean;
@@ -14,200 +19,89 @@ interface ResetTeamDataModalProps {
   onDataChanged: () => void;
 }
 
-const teamConfig = {
-  dna: { name: 'DNA', color: 'bg-blue-500' },
-  elite: { name: 'Elite', color: 'bg-purple-500' },
-  alcateia: { name: 'Alcateia', color: 'bg-amber-500' },
-};
+const ALL = '__all__';
 
+/** Novo circuito: zera o saldo de pontos (ajuste negativo registrado), sem apagar o histórico */
 export function ResetTeamDataModal({ open, onOpenChange, onDataChanged }: ResetTeamDataModalProps) {
+  const { teams } = useAppConfig();
+  const { isRoot } = useAuth();
+  const invalidate = useInvalidateEntries();
   const { toast } = useToast();
-  const [selectedTeam, setSelectedTeam] = useState<string>('');
-  const [resetConfirm, setResetConfirm] = useState('');
-  const [isResetting, setIsResetting] = useState(false);
-  const [resetType, setResetType] = useState<'team' | 'all'>('team');
+  const [scope, setScope] = useState<string>(ALL);
+  const [reason, setReason] = useState('');
+  const [alsoDelete, setAlsoDelete] = useState(false);
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  const handleResetTeamData = async () => {
-    if (resetConfirm !== 'CONFIRMAR') {
-      toast({
-        title: 'Confirmação necessária',
-        description: 'Digite CONFIRMAR para prosseguir',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (resetType === 'team' && !selectedTeam) {
-      toast({
-        title: 'Equipe não selecionada',
-        description: 'Selecione uma equipe para zerar',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsResetting(true);
-
+  const submit = async () => {
+    setBusy(true);
     try {
-      if (resetType === 'team') {
-        // Get all users from the team
-        const { data: teamMembers } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('team_id', selectedTeam);
-
-        if (teamMembers && teamMembers.length > 0) {
-          const userIds = teamMembers.map(m => m.id);
-
-          // Delete user daily data for team members
-          await supabase
-            .from('user_daily_data')
-            .delete()
-            .in('user_id', userIds);
-
-          // Reset user levels for team members
-          await supabase
-            .from('user_levels')
-            .update({ level_number: 1, level_name: 'Iniciante', total_points: 0 })
-            .in('user_id', userIds);
-        }
-
-        // Reset team data in gincana_daily_data
-        const teamPrefix = selectedTeam;
-        const updateData: Record<string, number> = {};
-        updateData[`${teamPrefix}_ofex`] = 0;
-        updateData[`${teamPrefix}_apoio`] = 0;
-        updateData[`${teamPrefix}_soria`] = 0;
-        updateData[`${teamPrefix}_cadastro`] = 0;
-
-        await supabase
-          .from('gincana_daily_data')
-          .update(updateData)
-          .neq('id', '00000000-0000-0000-0000-000000000000'); // Update all rows
-
-        toast({
-          title: 'Dados da equipe zerados',
-          description: `Todos os dados da equipe ${teamConfig[selectedTeam as keyof typeof teamConfig]?.name} foram zerados`,
-        });
-      } else {
-        // Reset ALL data
-        await supabase.from('user_daily_data').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        await supabase.from('gincana_daily_data').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        await supabase
-          .from('user_levels')
-          .update({ level_number: 1, level_name: 'Iniciante', total_points: 0 })
-          .neq('id', '00000000-0000-0000-0000-000000000000');
-
-        toast({
-          title: 'Todos os dados zerados',
-          description: 'Todos os dados de todas as equipes foram zerados',
-        });
+      const team = scope === ALL ? null : scope;
+      const { data, error } = await supabase.rpc('reset_points', { _team: team ?? undefined, _reason: reason });
+      if (error) throw error;
+      if (alsoDelete) {
+        const d = await supabase.rpc('delete_entries', { _team: team ?? undefined });
+        if (d.error) throw d.error;
       }
-
-      setResetConfirm('');
-      setSelectedTeam('');
+      toast({ title: `Pontos zerados de ${data} pessoa(s)`, description: alsoDelete ? 'Lançamentos também excluídos.' : 'O histórico continua no extrato.' });
+      invalidate();
       onDataChanged();
       onOpenChange(false);
-    } catch (error) {
-      console.error('Error resetting data:', error);
-      toast({
-        title: 'Erro ao zerar dados',
-        description: 'Ocorreu um erro ao tentar zerar os dados',
-        variant: 'destructive',
-      });
+      setConfirm('');
+      setReason('');
+    } catch (e) {
+      toast({ title: 'Não foi possível', description: errorMessage(e), variant: 'destructive' });
+    } finally {
+      setBusy(false);
     }
-
-    setIsResetting(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-destructive">
-            <Trash2 className="w-5 h-5" />
-            Zerar Pontuação
+          <DialogTitle className="flex items-center gap-2">
+            <RotateCcw className="h-5 w-5" /> Zerar pontuação
           </DialogTitle>
           <DialogDescription>
-            Zere a pontuação de uma equipe ou de todas as equipes
+            Use ao começar um novo circuito. O saldo vai a zero com um lançamento de ajuste; o histórico de cada pessoa continua no extrato.
           </DialogDescription>
         </DialogHeader>
-
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Atenção!</strong> Esta ação irá apagar permanentemente todos os dados de KPI e pontuação. Esta ação não pode ser desfeita.
-          </AlertDescription>
-        </Alert>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Selecione o Escopo
-            </CardTitle>
-            <CardDescription>
-              Escolha zerar uma equipe específica ou todas
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Tipo de Reset:</label>
-              <Select value={resetType} onValueChange={(v) => setResetType(v as 'team' | 'all')}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="team">Equipe Específica</SelectItem>
-                  <SelectItem value="all">Todas as Equipes</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {resetType === 'team' && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Equipe:</label>
-                <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a equipe" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dna">DNA</SelectItem>
-                    <SelectItem value="elite">Elite</SelectItem>
-                    <SelectItem value="alcateia">Alcateia</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Digite CONFIRMAR para prosseguir:
-              </label>
-              <input 
-                type="text"
-                value={resetConfirm}
-                onChange={(e) => setResetConfirm(e.target.value.toUpperCase())}
-                className="w-full px-3 py-2 border rounded-md bg-background"
-                placeholder="CONFIRMAR"
-              />
-            </div>
-
-            <Button 
-              variant="destructive"
-              onClick={handleResetTeamData}
-              disabled={resetConfirm !== 'CONFIRMAR' || isResetting || (resetType === 'team' && !selectedTeam)}
-              className="w-full gap-2"
-            >
-              {isResetting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-              {resetType === 'all' ? 'Zerar TUDO' : 'Zerar Equipe'}
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label>De quem</Label>
+            <Select value={scope} onValueChange={setScope}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Loja toda</SelectItem>
+                {teams.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.icon} {t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label>Motivo</Label>
+            <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ex.: início do Circuito 2027" />
+          </div>
+          <label className="flex items-start gap-2 text-sm">
+            <Checkbox checked={alsoDelete} onCheckedChange={(v) => setAlsoDelete(!!v)} disabled={scope === ALL && !isRoot} />
+            <span>
+              Também excluir os lançamentos de KPI
+              <span className="block text-xs text-muted-foreground">Irreversível. Para a loja toda, só o root.</span>
+            </span>
+          </label>
+          <div className="space-y-1">
+            <Label className="flex items-center gap-1 text-destructive"><AlertTriangle className="h-4 w-4" /> Digite CONFIRMAR</Label>
+            <Input value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button variant="destructive" disabled={busy || confirm !== 'CONFIRMAR' || !reason.trim()} onClick={submit}>
+              Zerar
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
