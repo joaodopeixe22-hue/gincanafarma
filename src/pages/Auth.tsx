@@ -88,7 +88,7 @@ export default function Auth() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground">Gincana Farma</h1>
-            <p className="text-sm text-muted-foreground">Circuito Farma 2025</p>
+            <p className="text-sm text-muted-foreground">Engajamento, agenda e resultados da loja</p>
           </div>
         </div>
 

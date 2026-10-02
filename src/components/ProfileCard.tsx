@@ -8,12 +8,9 @@ import { cn } from '@/lib/utils';
 import { LevelBadge } from '@/components/LevelBadge';
 import { LevelProgressBar } from '@/components/LevelProgressBar';
 import { LevelConfig } from '@/lib/levels';
+import { TeamBadge } from '@/components/TeamBadge';
+import { useAppConfig } from '@/hooks/data/useAppConfig';
 
-const teamConfig = {
-  dna: { name: 'DNA', color: 'bg-blue-500' },
-  elite: { name: 'Elite', color: 'bg-purple-500' },
-  alcateia: { name: 'Alcateia', color: 'bg-amber-500' },
-};
 
 interface ProfileCardProps {
   profile: Profile | null;
@@ -40,7 +37,8 @@ export function ProfileCard({
   progress = 0,
   pointsToNext = 0,
 }: ProfileCardProps) {
-  const team = profile?.team_id ? teamConfig[profile.team_id] : null;
+  const { teamById } = useAppConfig();
+  const team = teamById(profile?.team_id);
   const initials = profile?.full_name
     ?.split(' ')
     .map(n => n[0])
@@ -50,15 +48,9 @@ export function ProfileCard({
 
   return (
     <Card className="overflow-hidden">
-      <div className={cn(
-        'h-24 bg-gradient-to-r',
-        team ? `from-${team.color.replace('bg-', '')} to-${team.color.replace('bg-', '')}/70` : 'from-primary to-primary/70'
-      )} 
-      style={{
-        background: team 
-          ? `linear-gradient(to right, var(--${team.color.replace('bg-', '')}), var(--${team.color.replace('bg-', '')}))`
-          : undefined
-      }}
+      <div
+        className={cn('h-24 bg-gradient-to-r', !team && 'from-primary to-primary/70')}
+        style={{ background: team ? `linear-gradient(to right, ${team.color}, ${team.color}99)` : undefined }}
       />
       <CardContent className="relative pt-0">
         <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-12">
@@ -78,9 +70,7 @@ export function ProfileCard({
             )}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1">
               {team && (
-                <Badge className={cn(team.color, 'text-white')}>
-                  {team.name}
-                </Badge>
+                <TeamBadge teamId={team.id} full />
               )}
               {role === 'root' && (
                 <Badge variant="outline" className="border-rose-500 text-rose-500">

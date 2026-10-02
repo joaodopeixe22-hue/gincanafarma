@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { startOfWeek, endOfWeek, subWeeks, format, subDays } from 'date-fns';
+import { subWeeks, format, subDays } from 'date-fns';
+import { useAppConfig } from '@/hooks/data/useAppConfig';
+import { periodRange } from '@/lib/period';
 
 export interface DailyData {
   date: string;
@@ -28,6 +30,7 @@ export interface MemberPerformance {
 }
 
 export function useTeamReports(teamId: string | null) {
+  const { weekStartsOn } = useAppConfig();
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [weeklyComparison, setWeeklyComparison] = useState<WeeklyComparison | null>(null);
   const [memberPerformance, setMemberPerformance] = useState<MemberPerformance[]>([]);
@@ -44,10 +47,8 @@ export function useTeamReports(teamId: string | null) {
 
       const today = new Date();
       const thirtyDaysAgo = subDays(today, 30);
-      const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
-      const currentWeekEnd = endOfWeek(today, { weekStartsOn: 1 });
-      const lastWeekStart = startOfWeek(subWeeks(today, 1), { weekStartsOn: 1 });
-      const lastWeekEnd = endOfWeek(subWeeks(today, 1), { weekStartsOn: 1 });
+      const { start: currentWeekStart, end: currentWeekEnd } = periodRange('week', today, weekStartsOn);
+      const { start: lastWeekStart, end: lastWeekEnd } = periodRange('week', subWeeks(today, 1), weekStartsOn);
 
       // Get team members
       const { data: members } = await supabase
@@ -67,6 +68,7 @@ export function useTeamReports(teamId: string | null) {
         .from('user_daily_data')
         .select('date, ofex, apoio, soria, cadastro, user_id')
         .in('user_id', memberIds)
+        .eq('status', 'approved')
         .gte('date', format(thirtyDaysAgo, 'yyyy-MM-dd'))
         .order('date');
 
@@ -151,7 +153,7 @@ export function useTeamReports(teamId: string | null) {
     };
 
     fetchReports();
-  }, [teamId]);
+  }, [teamId, weekStartsOn]);
 
   return {
     dailyData,

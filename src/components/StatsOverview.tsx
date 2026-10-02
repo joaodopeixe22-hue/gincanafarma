@@ -1,52 +1,29 @@
-import { TeamRanking, KPIS, KPI_LABELS } from '@/types/gincana';
-import { TrendingUp, Target, Zap, Users } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { TrendingUp, Target, Zap, Users, type LucideIcon } from 'lucide-react';
+import { useAppConfig } from '@/hooks/data/useAppConfig';
+import type { TeamRanking } from '@/types/gincana';
+import type { KpiKey } from '@/types/db';
 
-interface StatsOverviewProps {
-  rankings: TeamRanking[];
-  period: string;
-}
+const kpiIcons: Record<KpiKey, LucideIcon> = { ofex: Target, apoio: Users, soria: Zap, cadastro: TrendingUp };
 
-const kpiIcons = {
-  ofex: Target,
-  apoio: Users,
-  soria: Zap,
-  cadastro: TrendingUp,
-};
-
-export function StatsOverview({ rankings, period }: StatsOverviewProps) {
-  const totalByKpi = KPIS.reduce((acc, kpi) => {
-    acc[kpi] = rankings.reduce((sum, team) => sum + team.kpis[kpi], 0);
-    return acc;
-  }, {} as Record<string, number>);
-
-  const grandTotal = Object.values(totalByKpi).reduce((a, b) => a + b, 0);
+export function StatsOverview({ rankings }: { rankings: TeamRanking[] }) {
+  const { kpis, kpiLabel } = useAppConfig();
+  const totals = kpis.map((k) => ({ key: k.key as KpiKey, value: rankings.reduce((s, t) => s + t.kpis[k.key as KpiKey], 0) }));
+  const grand = totals.reduce((s, t) => s + t.value, 0);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {KPIS.map((kpi, index) => {
-        const Icon = kpiIcons[kpi];
-        const value = totalByKpi[kpi];
-        const percentage = grandTotal > 0 ? ((value / grandTotal) * 100).toFixed(0) : 0;
-        
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      {totals.map(({ key, value }) => {
+        const Icon = kpiIcons[key];
         return (
-          <div
-            key={kpi}
-            className={cn(
-              'p-4 rounded-xl bg-card border border-border/50',
-              'hover:shadow-lg transition-all duration-300 hover:-translate-y-1'
-            )}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Icon className="w-4 h-4 text-primary" />
+          <div key={key} className="rounded-xl border border-border/50 bg-card p-3">
+            <div className="mb-1 flex items-center gap-2">
+              <div className="rounded-lg bg-primary/10 p-1.5">
+                <Icon className="h-4 w-4 text-primary" />
               </div>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {KPI_LABELS[kpi]}
-              </span>
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{kpiLabel(key)}</span>
             </div>
-            <div className="text-2xl font-bold text-foreground">{value}</div>
-            <div className="text-xs text-muted-foreground">{percentage}% do total</div>
+            <div className="text-2xl font-bold tabular-nums">{value}</div>
+            <div className="text-xs text-muted-foreground">{grand ? Math.round((100 * value) / grand) : 0}% do total</div>
           </div>
         );
       })}

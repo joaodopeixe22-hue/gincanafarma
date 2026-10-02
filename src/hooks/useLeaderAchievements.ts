@@ -31,11 +31,12 @@ export function useLeaderAchievements(teamId: string | null) {
     const fetchData = async () => {
       setIsLoading(true);
 
-      // Fetch challenge achievements only
+      // Líder concede somente conquistas "especiais" (manuais); as automáticas são calculadas pelo servidor
       const { data: achievementsData } = await supabase
         .from('achievements')
         .select('id, name, description, icon, category, points')
-        .eq('category', 'challenge')
+        .eq('manual_grant', true)
+        .eq('is_active', true)
         .order('name');
 
       // Fetch team members

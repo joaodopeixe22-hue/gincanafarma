@@ -1,3 +1,4 @@
+import { useAppConfig } from '@/hooks/data/useAppConfig';
 import { useState } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -26,15 +27,10 @@ interface SuggestionSheetProps {
   suggestion: Suggestion | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRespond?: (suggestionId: string, response: string, status: string) => Promise<{ error: any }>;
+  onRespond?: (suggestionId: string, response: string, status: string) => Promise<{ error: { message?: string } | null }>;
   canRespond?: boolean;
 }
 
-const TEAM_CONFIG: Record<string, { name: string; color: string }> = {
-  dna: { name: 'DNA', color: 'text-blue-500' },
-  elite: { name: 'Elite', color: 'text-amber-500' },
-  alcateia: { name: 'Alcateia', color: 'text-emerald-500' },
-};
 
 export function SuggestionSheet({ 
   suggestion, 
@@ -43,13 +39,14 @@ export function SuggestionSheet({
   onRespond,
   canRespond = false 
 }: SuggestionSheetProps) {
+  const { teamById } = useAppConfig();
   const [response, setResponse] = useState('');
   const [status, setStatus] = useState('read');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!suggestion) return null;
 
-  const teamConfig = suggestion.user_team ? TEAM_CONFIG[suggestion.user_team] : null;
+  const team = teamById(suggestion.user_team);
 
   const handleRespond = async () => {
     if (!onRespond || !response.trim()) return;
@@ -83,9 +80,9 @@ export function SuggestionSheet({
             <div className="flex items-center gap-2 text-sm">
               <User className="w-4 h-4 text-muted-foreground" />
               <span className="font-medium">{suggestion.user_name}</span>
-              {teamConfig && (
-                <span className={`text-xs ${teamConfig.color}`}>
-                  ({teamConfig.name})
+              {team && (
+                <span className="text-xs text-muted-foreground">
+                  ({team.icon} {team.short_name})
                 </span>
               )}
             </div>

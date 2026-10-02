@@ -5,14 +5,14 @@ import { useTourState } from '@/hooks/useTourState';
 import { getTourSteps, tourLocale } from './tourSteps';
 
 interface GuidedTourProps {
-  onTourReset?: () => void;
+  isMobile?: boolean;
 }
 
-export function GuidedTour({ onTourReset }: GuidedTourProps) {
-  const { user, isLider, isAuthenticated } = useAuth();
-  const { shouldShowTour, isLoading, completeTour, resetTour } = useTourState(user?.id);
+export function GuidedTour({ isMobile = false }: GuidedTourProps) {
+  const { user, isLider } = useAuth();
+  const { shouldShowTour, isLoading, completeTour } = useTourState(user?.id);
 
-  const steps = getTourSteps(isLider, isAuthenticated);
+  const steps = getTourSteps(isLider, isMobile);
 
   const handleCallback = useCallback((data: CallBackProps) => {
     const { status, action, type } = data;
@@ -112,6 +112,3 @@ export function GuidedTour({ onTourReset }: GuidedTourProps) {
     />
   );
 }
-
-// Export do hook para usar o resetTour externamente
-export { useTourState };

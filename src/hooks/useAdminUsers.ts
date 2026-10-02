@@ -25,7 +25,7 @@ export function useAdminUsers() {
         return {
           id: profile.id,
           email: '', // We can't get email from profiles, will need to handle differently
-          profile: profile as any,
+          profile: (profile ?? null) as UserWithProfile['profile'],
           role: userRole?.role as 'admin' | 'lider' | 'member' | null || null,
         };
       });

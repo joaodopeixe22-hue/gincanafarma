@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/errors';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -84,11 +85,11 @@ export function useSuggestions(userId?: string, isAdmin?: boolean) {
         setSuggestions([]);
         setPendingCount(0);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching suggestions:', error);
       toast({
         title: 'Erro ao carregar sugestões',
-        description: error.message,
+        description: errorMessage(error),
         variant: 'destructive',
       });
     } finally {
@@ -118,10 +119,10 @@ export function useSuggestions(userId?: string, isAdmin?: boolean) {
 
       await fetchSuggestions();
       return { error: null };
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao enviar sugestão',
-        description: error.message,
+        description: errorMessage(error),
         variant: 'destructive',
       });
       return { error };
@@ -144,10 +145,10 @@ export function useSuggestions(userId?: string, isAdmin?: boolean) {
 
       await fetchSuggestions();
       return { error: null };
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao atualizar sugestão',
-        description: error.message,
+        description: errorMessage(error),
         variant: 'destructive',
       });
       return { error };

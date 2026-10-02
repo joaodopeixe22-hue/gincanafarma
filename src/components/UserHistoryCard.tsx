@@ -1,3 +1,4 @@
+import { StatusBadge } from '@/components/common';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -101,7 +102,10 @@ export function UserHistoryCard({ records, totals, isLoading }: UserHistoryCardP
                     <span>Apoio: <span className="text-foreground font-medium">{record.apoio}</span></span>
                     <span>Sorria: <span className="text-foreground font-medium">{record.soria}</span></span>
                     <span>Cadastro: <span className="text-foreground font-medium">{record.cadastro}</span></span>
-                    <span className="ml-auto font-medium text-primary">Total: {recordTotal}</span>
+                    <span className="ml-auto flex items-center gap-2 font-medium text-primary">
+                      <StatusBadge status={record.status} />
+                      Total: {recordTotal}
+                    </span>
                   </div>
                 </div>
               );

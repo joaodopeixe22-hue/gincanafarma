@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/errors';
 import { useState } from 'react';
 import { z } from 'zod';
 import { UserPlus, IdCard, Lock, User, Users, Loader2, Star, Shield } from 'lucide-react';
@@ -8,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAppConfig } from '@/hooks/data/useAppConfig';
+import { useAuth } from '@/hooks/useAuth';
 
 const createUserSchema = z.object({
   matricula: z.string()
@@ -15,7 +18,7 @@ const createUserSchema = z.object({
     .regex(/^[a-zA-Z0-9._-]+$/, { message: 'Matrícula só pode conter letras, números, pontos, hífens e underscores' }),
   password: z.string().min(6, { message: 'Senha deve ter no mínimo 6 caracteres' }),
   full_name: z.string().min(2, { message: 'Nome deve ter no mínimo 2 caracteres' }),
-  team_id: z.enum(['dna', 'elite', 'alcateia']).optional(),
+  team_id: z.string().optional(),
   role: z.enum(['member', 'lider', 'admin']),
 });
 
@@ -25,14 +28,11 @@ interface CreateUserModalProps {
   onUserCreated?: () => void;
 }
 
-const teamConfig = {
-  dna: { name: 'DNA', color: 'bg-blue-500' },
-  elite: { name: 'Elite', color: 'bg-purple-500' },
-  alcateia: { name: 'Alcateia', color: 'bg-amber-500' },
-};
 
 export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUserModalProps) {
   const { toast } = useToast();
+  const { teams } = useAppConfig();
+  const { isRoot } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
@@ -98,11 +98,11 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
       resetForm();
       onOpenChange(false);
       onUserCreated?.();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating user:', error);
       toast({
         title: 'Erro ao criar usuário',
-        description: error.message || 'Erro desconhecido',
+        description: errorMessage(error, 'Erro desconhecido'),
         variant: 'destructive',
       });
     } finally {
@@ -181,11 +181,11 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(teamConfig).map(([id, config]) => (
-                    <SelectItem key={id} value={id}>
+                  {teams.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
                       <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${config.color}`} />
-                        {config.name}
+                        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: t.color }} />
+                        {t.name}
                       </div>
                     </SelectItem>
                   ))}
@@ -215,12 +215,14 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
                       Líder
                     </div>
                   </SelectItem>
-                  <SelectItem value="admin">
-                    <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-amber-500" />
-                      Admin
-                    </div>
-                  </SelectItem>
+                  {isRoot && (
+                    <SelectItem value="admin">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-amber-500" />
+                        Admin
+                      </div>
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>

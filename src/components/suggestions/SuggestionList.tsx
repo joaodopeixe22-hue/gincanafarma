@@ -18,7 +18,7 @@ interface SuggestionListProps {
   suggestions: Suggestion[];
   isLoading: boolean;
   pendingCount: number;
-  onRespond: (suggestionId: string, response: string, status: string) => Promise<{ error: any }>;
+  onRespond: (suggestionId: string, response: string, status: string) => Promise<{ error: { message?: string } | null }>;
 }
 
 export function SuggestionList({ suggestions, isLoading, pendingCount, onRespond }: SuggestionListProps) {

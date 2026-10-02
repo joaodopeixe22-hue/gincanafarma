@@ -15,9 +15,9 @@ interface ConfettiProps {
 }
 
 const colors = [
-  'hsl(var(--team-dna))',
-  'hsl(var(--team-elite))',
-  'hsl(var(--team-alcateia))',
+  '#00754B',
+  '#F4C86A',
+  '#2A6FB0',
   '#FFD700',
   '#FF6B6B',
   '#4ECDC4',

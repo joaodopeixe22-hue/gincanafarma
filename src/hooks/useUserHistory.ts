@@ -8,6 +8,8 @@ export interface UserHistoryRecord {
   apoio: number;
   soria: number;
   cadastro: number;
+  status: string;
+  review_note: string | null;
 }
 
 export interface UserHistoryTotals {
@@ -32,7 +34,7 @@ export function useUserHistory(userId?: string) {
     setIsLoading(true);
     const { data, error } = await supabase
       .from('user_daily_data')
-      .select('id, date, ofex, apoio, soria, cadastro')
+      .select('id, date, ofex, apoio, soria, cadastro, status, review_note')
       .eq('user_id', userId)
       .order('date', { ascending: false });
 
@@ -49,7 +51,8 @@ export function useUserHistory(userId?: string) {
     fetchHistory();
   }, [fetchHistory]);
 
-  const totals: UserHistoryTotals = records.reduce(
+  // Totais consideram só dias aprovados
+  const totals: UserHistoryTotals = records.filter((r) => r.status === 'approved').reduce(
     (acc, record) => ({
       ofex: acc.ofex + record.ofex,
       apoio: acc.apoio + record.apoio,

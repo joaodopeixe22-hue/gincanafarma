@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoals } from '@/hooks/useGoals';
-import { TeamRanking, KPIS } from '@/types/gincana';
+import { useAppConfig } from '@/hooks/data/useAppConfig';
+import type { TeamRanking } from '@/types/gincana';
 import { Confetti } from './Confetti';
 
 interface GoalsProgressProps {
@@ -16,16 +17,17 @@ interface GoalsProgressProps {
   isAdmin?: boolean;
 }
 
-const kpiLabels: Record<string, string> = {
-  ofex: 'OFEX',
-  apoio: 'Apoio',
-  soria: 'Soria',
-  cadastro: 'Cadastro',
-  total: 'Total Geral',
-};
-
+/** Metas da LOJA (soma das equipes) — diárias e semanais */
 export function GoalsProgress({ dailyRanking, weeklyRanking, isAdmin = false }: GoalsProgressProps) {
   const { getGoal, updateGoal, isLoading } = useGoals();
+  const { kpiLabel } = useAppConfig();
+  const kpiLabels: Record<string, string> = {
+    ofex: kpiLabel('ofex'),
+    apoio: kpiLabel('apoio'),
+    soria: kpiLabel('soria'),
+    cadastro: kpiLabel('cadastro'),
+    total: 'Total Geral',
+  };
   const [editingGoal, setEditingGoal] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
@@ -214,9 +216,9 @@ export function GoalsProgress({ dailyRanking, weeklyRanking, isAdmin = false }: 
   const renderPeriodGoals = (periodType: 'daily' | 'weekly', totals: Record<string, number>) => (
     <div className="grid gap-3">
       {renderProgressBar(periodType, 'total', totals.total, <Target className="w-4 h-4 text-primary" />)}
-      {renderProgressBar(periodType, 'ofex', totals.ofex, <TrendingUp className="w-4 h-4 text-team-dna" />)}
-      {renderProgressBar(periodType, 'apoio', totals.apoio, <TrendingUp className="w-4 h-4 text-team-elite" />)}
-      {renderProgressBar(periodType, 'soria', totals.soria, <TrendingUp className="w-4 h-4 text-team-alcateia" />)}
+      {renderProgressBar(periodType, 'ofex', totals.ofex, <TrendingUp className="w-4 h-4 text-primary" />)}
+      {renderProgressBar(periodType, 'apoio', totals.apoio, <TrendingUp className="w-4 h-4 text-primary" />)}
+      {renderProgressBar(periodType, 'soria', totals.soria, <TrendingUp className="w-4 h-4 text-primary" />)}
       {renderProgressBar(periodType, 'cadastro', totals.cadastro, <TrendingUp className="w-4 h-4 text-primary" />)}
     </div>
   );
@@ -229,7 +231,7 @@ export function GoalsProgress({ dailyRanking, weeklyRanking, isAdmin = false }: 
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="w-5 h-5 text-primary" />
-            Metas de Desempenho
+            Metas da Loja
           </CardTitle>
         </CardHeader>
         <CardContent>

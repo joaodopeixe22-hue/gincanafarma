@@ -1,48 +1,33 @@
 import { cn } from '@/lib/utils';
+import { useAppConfig } from '@/hooks/data/useAppConfig';
 
 interface TeamBadgeProps {
-  teamId: 'dna' | 'elite' | 'alcateia';
+  teamId: string | null | undefined;
   size?: 'sm' | 'md' | 'lg';
   showName?: boolean;
+  full?: boolean;
 }
 
-const teamConfig = {
-  dna: {
-    name: 'DNA de Campeões',
-    shortName: 'DNA',
-    icon: '🏆',
-  },
-  elite: {
-    name: 'Elite do Cuidado',
-    shortName: 'Elite',
-    icon: '💎',
-  },
-  alcateia: {
-    name: 'Alcateia',
-    shortName: 'Alcateia',
-    icon: '🐺',
-  },
-};
+/** Selo da equipe com nome, ícone e cor vindos do banco (Admin › Configurações › Equipes). */
+export function TeamBadge({ teamId, size = 'md', showName = true, full = false }: TeamBadgeProps) {
+  const { teamById } = useAppConfig();
+  const team = teamById(teamId);
+  if (!team) return null;
 
-export function TeamBadge({ teamId, size = 'md', showName = true }: TeamBadgeProps) {
-  const config = teamConfig[teamId];
-  
   const sizeClasses = {
-    sm: 'text-xs px-2 py-1',
-    md: 'text-sm px-3 py-1.5',
-    lg: 'text-base px-4 py-2',
+    sm: 'text-xs px-2 py-0.5',
+    md: 'text-sm px-3 py-1',
+    lg: 'text-base px-4 py-1.5',
   };
 
   return (
-    <div
-      className={cn(
-        'inline-flex items-center gap-2 rounded-full font-semibold',
-        `bg-team-${teamId} text-team-${teamId}-foreground`,
-        sizeClasses[size]
-      )}
+    <span
+      className={cn('inline-flex items-center gap-1.5 rounded-full font-semibold border whitespace-nowrap', sizeClasses[size])}
+      style={{ backgroundColor: `${team.color}22`, borderColor: `${team.color}66`, color: 'hsl(var(--foreground))' }}
+      title={team.name}
     >
-      <span>{config.icon}</span>
-      {showName && <span>{config.shortName}</span>}
-    </div>
+      <span aria-hidden>{team.icon}</span>
+      {showName && <span>{full ? team.name : team.short_name}</span>}
+    </span>
   );
 }

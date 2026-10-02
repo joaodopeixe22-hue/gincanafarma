@@ -118,3 +118,7 @@ export function getPointsToNextLevel(points: number): number {
   
   return nextLevel.minPoints - points;
 }
+
+export function getLevelByNumber(levelNumber?: number | null): LevelConfig {
+  return LEVELS.find((l) => l.level === levelNumber) ?? LEVELS[0];
+}
