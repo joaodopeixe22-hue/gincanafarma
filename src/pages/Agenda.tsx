@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { EmptyState, Loading, PageHeader, PeriodNav, PersonAvatar } from '@/components/common';
 import { NewTaskDialog } from '@/components/agenda/NewTaskDialog';
+import { ConfirmDialog, ReasonDialog } from '@/components/common/dialogs';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppConfig } from '@/hooks/data/useAppConfig';
 import { useDirectory } from '@/hooks/data/useDirectory';
@@ -33,6 +34,8 @@ function TaskRow({ task, showOwner }: { task: Task; showOwner: boolean }) {
   const done = task.status === 'concluida';
   const late = !done && task.due_date < todayISO();
   const owner = byId(task.assigned_to);
+  const [askReason, setAskReason] = useState(false);
+  const [askDeleteGroup, setAskDeleteGroup] = useState(false);
 
   const run = async (fn: () => Promise<unknown>, ok?: string) => {
     try {
@@ -85,12 +88,7 @@ function TaskRow({ task, showOwner }: { task: Task; showOwner: boolean }) {
               </DropdownMenuItem>
             )}
             {done && (
-              <DropdownMenuItem
-                onClick={() => {
-                  const note = window.prompt('Por que está devolvendo? (a pessoa verá a mensagem)');
-                  if (note) run(() => review.mutateAsync({ id: task.id, decision: 'recusar', note }), 'Tarefa devolvida');
-                }}
-              >
+              <DropdownMenuItem onClick={() => setAskReason(true)}>
                 <Undo2 className="mr-2 h-4 w-4" /> Devolver (não foi feita)
               </DropdownMenuItem>
             )}
@@ -100,13 +98,31 @@ function TaskRow({ task, showOwner }: { task: Task; showOwner: boolean }) {
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
-              onClick={() => window.confirm('Excluir todas as tarefas criadas junto com esta (a rotina inteira)?') && run(() => remove.mutateAsync({ group: task.group_id }), 'Rotina excluída')}
+              onClick={() => setAskDeleteGroup(true)}
             >
               Excluir rotina inteira
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+      <ReasonDialog
+        open={askReason}
+        onOpenChange={setAskReason}
+        title="Devolver tarefa"
+        label="Por que está devolvendo? A pessoa verá a mensagem."
+        placeholder="Ex.: faltou conferir a gôndola 3"
+        confirmLabel="Devolver"
+        onConfirm={(note) => run(() => review.mutateAsync({ id: task.id, decision: 'recusar', note }), 'Tarefa devolvida')}
+      />
+      <ConfirmDialog
+        open={askDeleteGroup}
+        onOpenChange={setAskDeleteGroup}
+        title="Excluir a rotina inteira?"
+        description="Todas as tarefas criadas junto com esta serão excluídas, e os pontos já ganhos com elas serão estornados."
+        confirmLabel="Excluir rotina"
+        destructive
+        onConfirm={() => run(() => remove.mutateAsync({ group: task.group_id }), 'Rotina excluída')}
+      />
     </div>
   );
 }

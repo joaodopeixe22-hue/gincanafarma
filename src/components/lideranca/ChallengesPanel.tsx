@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EmptyState, Loading, PersonAvatar } from '@/components/common';
+import { ConfirmDialog } from '@/components/common/dialogs';
 import { TeamBadge } from '@/components/TeamBadge';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppConfig } from '@/hooks/data/useAppConfig';
@@ -137,6 +138,7 @@ export function ChallengesPanel() {
   const { update, remove, setCompletion } = useChallengeActions();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [toDelete, setToDelete] = useState<string | null>(null);
 
   const list = useMemo(
     () => (q.data ?? []).filter((c) => isAdmin || c.team_id === me?.team_id).sort((a, b) => b.end_time.localeCompare(a.end_time)),
@@ -195,7 +197,8 @@ export function ChallengesPanel() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-destructive"
-                    onClick={() => window.confirm('Excluir campanha? Bônus já creditados serão estornados.') && run(() => remove.mutateAsync(c.id), 'Excluída')}
+                    onClick={() => setToDelete(c.id)}
+                    aria-label="Excluir campanha"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -238,6 +241,15 @@ export function ChallengesPanel() {
         })
       )}
       <NewChallengeDialog open={open} onOpenChange={setOpen} />
+      <ConfirmDialog
+        open={!!toDelete}
+        onOpenChange={(o) => !o && setToDelete(null)}
+        title="Excluir campanha?"
+        description="Os bônus já creditados aos participantes serão estornados."
+        confirmLabel="Excluir"
+        destructive
+        onConfirm={() => toDelete && run(() => remove.mutateAsync(toDelete), 'Campanha excluída')}
+      />
     </div>
   );
 }
